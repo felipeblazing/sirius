@@ -47,8 +47,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [x] 02-01-PLAN.md -- Data locality computation in task_creator and locality-aware routing in management_eventloop
-- [x] 02-02-PLAN.md -- Cross-GPU scan distribution and integration tests for locality scheduling
+- [ ] 02-01-PLAN.md -- Data locality computation in task_creator and locality-aware routing in management_eventloop
+- [ ] 02-02-PLAN.md -- Cross-GPU scan distribution and integration tests for locality scheduling
 
 ### Phase 3: NUMA-Aware Memory and Transfer Optimization
 **Goal**: Memory downgrade respects NUMA topology for minimal latency, and GPU-to-GPU transfers use direct P2P when available
@@ -59,11 +59,10 @@ Plans:
   2. If NUMA-local host memory is also exhausted, downgrade falls back to cross-NUMA host memory rather than failing -- verified by filling both GPU and local host memory
   3. On systems with NVLink or PCIe P2P access, GPU-to-GPU transfer uses cudaMemcpyPeerAsync directly (skipping host staging) and is measurably faster than host-staged path -- verified by transfer bandwidth comparison
   4. Scan batches are distributed across GPUs proportional to available memory, not round-robin -- verified by running a large scan with asymmetric GPU memory availability and checking batch distribution
-**Plans:** 2 plans
+**Plans:** 1 plan
 
 Plans:
-- [ ] 03-01-PLAN.md -- NUMA downgrade ordering verification and cross-NUMA fallback tests
-- [ ] 03-02-PLAN.md -- P2P transfer verification with bandwidth measurement and adaptive scan distribution tests
+- [ ] 03-01-PLAN.md -- Verification tests for MEM-01/02/04/05 (NUMA downgrade, P2P transfer, proportional scan)
 
 ## Progress
 
@@ -73,5 +72,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Multi-GPU Foundation | 3/3 | Complete | - |
-| 2. Data-Locality Task Scheduling | 1/2 | Executing | - |
-| 3. NUMA-Aware Memory and Transfer Optimization | 0/2 | Not started | - |
+| 2. Data-Locality Task Scheduling | 0/2 | Planning | - |
+| 3. NUMA-Aware Memory and Transfer Optimization | 0/1 | Planning | - |
