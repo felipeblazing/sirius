@@ -44,11 +44,11 @@ Plans:
   2. When no GPU has the input data loaded, the task is routed to a GPU on the same NUMA node as the host memory where data resides -- verified on a multi-NUMA system
   3. When all GPUs are at capacity, the task waits on its preferred GPU rather than being dispatched to a random GPU -- verified by saturating GPU memory and observing wait behavior in logs
   4. A multi-pipeline query (e.g., TPC-H Q5 with multiple joins) can have different pipelines execute on different GPUs based on where each pipeline's data landed -- verified by log inspection showing cross-GPU pipeline distribution
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Data locality computation in task_creator and locality-aware routing in management_eventloop
+- [ ] 02-02-PLAN.md -- Cross-GPU scan distribution and integration tests for locality scheduling
 
 ### Phase 3: NUMA-Aware Memory and Transfer Optimization
 **Goal**: Memory downgrade respects NUMA topology for minimal latency, and GPU-to-GPU transfers use direct P2P when available
@@ -72,6 +72,6 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Multi-GPU Foundation | 0/3 | Not started | - |
-| 2. Data-Locality Task Scheduling | 0/2 | Not started | - |
+| 1. Multi-GPU Foundation | 3/3 | Complete | - |
+| 2. Data-Locality Task Scheduling | 0/2 | Planning | - |
 | 3. NUMA-Aware Memory and Transfer Optimization | 0/2 | Not started | - |
