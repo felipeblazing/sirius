@@ -43,6 +43,7 @@
 
 #include <chrono>
 #include <memory>
+#include <set>
 #include <thread>
 #include <vector>
 
@@ -515,6 +516,188 @@ TEST_CASE("downgrade_executor_default_numa_node_is_nullopt", "[downgrade][numa_a
   REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST);
 
   executor.stop();
+}
+
+// ---------------------------------------------------------------------------
+// NUMA downgrade ordering and cross-NUMA fallback verification tests (Plan 03-01)
+// ---------------------------------------------------------------------------
+
+namespace {
+
+/**
+ * @brief Helper to create a 2-GPU memory manager for NUMA verification tests.
+ */
+std::unique_ptr<sirius::memory::sirius_memory_reservation_manager> make_multi_gpu_memory_manager()
+{
+  sirius::converter_registry::reset_for_testing();
+
+  cucascade::memory::reservation_manager_configurator builder;
+  const size_t gpu_capacity  = 512ull << 20;  // 512 MB
+  const double limit_ratio   = 0.75;
+  const size_t host_capacity = 1ull << 30;  // 1 GB per HOST space
+
+  builder.set_number_of_gpus(2)
+    .set_gpu_usage_limit(gpu_capacity)
+    .set_reservation_fraction_per_gpu(limit_ratio)
+    .set_per_host_capacity(host_capacity)
+    .use_host_per_gpu()
+    .set_reservation_fraction_per_host(limit_ratio);
+
+  auto space_configs = builder.build();
+  auto manager =
+    std::make_unique<sirius::memory::sirius_memory_reservation_manager>(std::move(space_configs));
+
+  sirius::converter_registry::initialize();
+  return manager;
+}
+
+}  // namespace
+
+TEST_CASE("numa_downgrade_prefers_local_host_space", "[numa_downgrade_verification]")
+{
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    WARN("requires 2+ GPUs for NUMA downgrade preference test -- skipping");
+    return;
+  }
+
+  auto mem_mgr = make_multi_gpu_memory_manager();
+
+  // Verify we have 2 HOST spaces with distinct device_ids
+  auto host_spaces = mem_mgr->get_memory_spaces_for_tier(cucascade::memory::Tier::HOST);
+  REQUIRE(host_spaces.size() == 2);
+  REQUIRE(host_spaces[0]->get_device_id() != host_spaces[1]->get_device_id());
+
+  // Get GPU 0 space
+  auto gpu_spaces = mem_mgr->get_memory_spaces_for_tier(cucascade::memory::Tier::GPU);
+  REQUIRE(gpu_spaces.size() == 2);
+  auto* gpu0 = const_cast<cucascade::memory::memory_space*>(gpu_spaces[0]);
+
+  cucascade::shared_data_repository_manager repo_mgr;
+
+  // Create executor with NUMA preference = 0 (prefer HOST space with device_id=0)
+  auto gpu0_space_id = cucascade::memory::memory_space_id(cucascade::memory::Tier::GPU, 0);
+  sirius::exec::thread_pool_config config{1, "downgrade_numa_test"};
+  downgrade_executor executor(
+    config, repo_mgr, gpu0_space_id, gpu0, *mem_mgr, std::optional<int>{0});
+  executor.start();
+
+  // Create a GPU batch on GPU 0 and add to a repository
+  cucascade::shared_data_repository repo;
+  auto batch = make_gpu_batch(*gpu0);
+  repo.add_data_batch(batch);
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+
+  // Run downgrade pass
+  std::vector<downgrade_repository_info> repos = {{&repo}};
+  size_t scheduled = executor.run_downgrade_pass(repos, 1ull << 30);
+  REQUIRE(scheduled == 1);
+
+  // Wait for downgrade to complete
+  auto deadline = std::chrono::steady_clock::now() + 10s;
+  while (std::chrono::steady_clock::now() < deadline) {
+    if (batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST) break;
+    std::this_thread::sleep_for(50ms);
+  }
+
+  // Verify batch is on HOST tier
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST);
+
+  // Verify batch landed on the NUMA-local HOST space (device_id == 0)
+  REQUIRE(batch->get_memory_space()->get_device_id() == 0);
+
+  executor.stop();
+}
+
+TEST_CASE("numa_downgrade_falls_back_to_cross_numa_host", "[numa_downgrade_verification]")
+{
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    WARN("requires 2+ GPUs for cross-NUMA fallback test -- skipping");
+    return;
+  }
+
+  // Verify candidate ordering at cucascade level: with pref=0, the first candidate
+  // should be device_id=0 and the second should be device_id=1, proving fallback order.
+  auto mem_mgr = make_multi_gpu_memory_manager();
+
+  auto host_spaces = mem_mgr->get_memory_spaces_for_tier(cucascade::memory::Tier::HOST);
+  REQUIRE(host_spaces.size() == 2);
+
+  // Use any_memory_space_in_tier_with_preference to check ordering with pref=0
+  cucascade::memory::any_memory_space_in_tier_with_preference strategy_pref0{
+    cucascade::memory::Tier::HOST, std::optional<size_t>{0}};
+  auto candidates_pref0 = strategy_pref0.get_candidates(*mem_mgr);
+  REQUIRE(candidates_pref0.size() == 2);
+
+  // First candidate should be the preferred (device_id=0)
+  REQUIRE(candidates_pref0[0]->get_device_id() == 0);
+  // Second candidate is the fallback (device_id=1)
+  REQUIRE(candidates_pref0[1]->get_device_id() == 1);
+
+  // Now verify the reverse: with pref=1, order should be flipped
+  cucascade::memory::any_memory_space_in_tier_with_preference strategy_pref1{
+    cucascade::memory::Tier::HOST, std::optional<size_t>{1}};
+  auto candidates_pref1 = strategy_pref1.get_candidates(*mem_mgr);
+  REQUIRE(candidates_pref1.size() == 2);
+  REQUIRE(candidates_pref1[0]->get_device_id() == 1);
+  REQUIRE(candidates_pref1[1]->get_device_id() == 0);
+
+  mem_mgr->shutdown();
+  sirius::converter_registry::shutdown();
+}
+
+TEST_CASE("numa_downgrade_candidate_ordering_verified", "[numa_downgrade_verification]")
+{
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    WARN("requires 2+ GPUs for candidate ordering test -- skipping");
+    return;
+  }
+
+  auto mem_mgr = make_multi_gpu_memory_manager();
+
+  // Test 1: pref=0 -> first candidate is device 0, second is device 1
+  {
+    cucascade::memory::any_memory_space_in_tier_with_preference strategy{
+      cucascade::memory::Tier::HOST, std::optional<size_t>{0}};
+    auto candidates = strategy.get_candidates(*mem_mgr);
+    REQUIRE(candidates.size() == 2);
+    REQUIRE(candidates[0]->get_device_id() == 0);
+    REQUIRE(candidates[1]->get_device_id() == 1);
+  }
+
+  // Test 2: pref=1 -> first candidate is device 1, second is device 0
+  {
+    cucascade::memory::any_memory_space_in_tier_with_preference strategy{
+      cucascade::memory::Tier::HOST, std::optional<size_t>{1}};
+    auto candidates = strategy.get_candidates(*mem_mgr);
+    REQUIRE(candidates.size() == 2);
+    REQUIRE(candidates[0]->get_device_id() == 1);
+    REQUIRE(candidates[1]->get_device_id() == 0);
+  }
+
+  // Test 3: pref=nullopt -> both candidates present (order may vary)
+  {
+    cucascade::memory::any_memory_space_in_tier_with_preference strategy{
+      cucascade::memory::Tier::HOST, std::nullopt};
+    auto candidates = strategy.get_candidates(*mem_mgr);
+    REQUIRE(candidates.size() == 2);
+
+    // Both device IDs should be present
+    std::set<int> device_ids;
+    for (auto* c : candidates) {
+      device_ids.insert(c->get_device_id());
+    }
+    REQUIRE(device_ids.count(0) == 1);
+    REQUIRE(device_ids.count(1) == 1);
+  }
+
+  mem_mgr->shutdown();
+  sirius::converter_registry::shutdown();
 }
 
 TEST_CASE("gpu_to_gpu_transfer_via_converter", "[.][multi_gpu_transfer]")
