@@ -26,8 +26,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Memory Management
 
-- [ ] **MEM-01**: When GPU memory is exhausted, data downgrades to pinned host memory on the same NUMA domain as that GPU first
-- [ ] **MEM-02**: If local NUMA host memory is exhausted, downgrade falls back to cross-NUMA host memory
+- [x] **MEM-01**: When GPU memory is exhausted, data downgrades to pinned host memory on the same NUMA domain as that GPU first
+- [x] **MEM-02**: If local NUMA host memory is exhausted, downgrade falls back to cross-NUMA host memory
 - [x] **MEM-03**: GPU-to-GPU data transfer works via host staging (GPU0 -> host -> GPU1) using cucascade converters
 - [ ] **MEM-04**: GPU-direct peer-to-peer transfer via cudaMemcpyPeerAsync when P2P access is available (NVLink/PCIe P2P)
 - [ ] **MEM-05**: Scan batches distributed across GPUs by available memory (adaptive scan partitioning)
@@ -77,8 +77,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCHED-03 | Phase 2 | Pending |
 | SCHED-04 | Phase 2 | Pending |
 | SCHED-05 | Phase 2 | Pending |
-| MEM-01 | Phase 3 | Pending |
-| MEM-02 | Phase 3 | Pending |
+| MEM-01 | Phase 3 | Complete |
+| MEM-02 | Phase 3 | Complete |
 | MEM-03 | Phase 1 | Complete |
 | MEM-04 | Phase 3 | Pending |
 | MEM-05 | Phase 3 | Pending |
