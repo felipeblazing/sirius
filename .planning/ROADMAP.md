@@ -47,7 +47,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Data locality computation in task_creator and locality-aware routing in management_eventloop
+- [x] 02-01-PLAN.md -- Data locality computation in task_creator and locality-aware routing in management_eventloop
 - [ ] 02-02-PLAN.md -- Cross-GPU scan distribution and integration tests for locality scheduling
 
 ### Phase 3: NUMA-Aware Memory and Transfer Optimization
@@ -73,5 +73,5 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Multi-GPU Foundation | 3/3 | Complete | - |
-| 2. Data-Locality Task Scheduling | 0/2 | Planning | - |
+| 2. Data-Locality Task Scheduling | 1/2 | Executing | - |
 | 3. NUMA-Aware Memory and Transfer Optimization | 0/2 | Not started | - |

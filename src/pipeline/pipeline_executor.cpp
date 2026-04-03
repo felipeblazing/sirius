@@ -207,19 +207,31 @@ void pipeline_executor::drain_after_error()
 void pipeline_executor::management_eventloop()
 {
   while (_running.load()) {
-    auto request = _task_request_channel.get();
-    if (request == nullptr) {
-      SIRIUS_LOG_INFO("Task request channel closed, exiting management event loop.");
+    // Task-first: pop the next GPU pipeline task to dispatch.
+    // Scan tasks are routed directly to _scan_executor in schedule(), so
+    // all tasks in _task_queue are GPU pipeline tasks.
+    auto task = _task_queue.pop();
+    if (task == nullptr) {
+      SIRIUS_LOG_INFO("Task queue closed, exiting management event loop.");
       break;
     }
-    if (!request->is_scan) {
-      auto task = _task_queue.pop();
-      if (task == nullptr) {
-        SIRIUS_LOG_INFO("Task queue closed, exiting management event loop.");
-        break;
+
+    // Determine target GPU from task's data locality preference (SCHED-01/02/04).
+    int target_device_id = _gpu_executors.begin()->first;  // default: first GPU
+    if (auto* gpu_task = dynamic_cast<pipeline::gpu_pipeline_task*>(task.get())) {
+      auto pref = gpu_task->get_preferred_device_id();
+      if (pref.has_value() && _gpu_executors.count(pref.value())) {
+        target_device_id = pref.value();
       }
-      _gpu_executors.at(request->device_id)->schedule(std::move(task));
     }
+
+    SIRIUS_LOG_DEBUG("management_eventloop: routing task to GPU {}", target_device_id);
+    // Push to the preferred GPU executor's queue. The gpu_pipeline_executor's
+    // manager_loop() handles capacity control via bounded_pool->reserve() and
+    // memory reservation via make_reservation(). If the preferred GPU is at
+    // capacity, the task waits in its queue (SCHED-03).
+    // TODO: Future optimization — try other GPUs if preferred is at capacity.
+    _gpu_executors.at(target_device_id)->schedule(std::move(task));
   }
 }
 

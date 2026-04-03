@@ -18,10 +18,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Task Scheduling
 
-- [ ] **SCHED-01**: Task creator routes pipeline tasks to the GPU where the most input data (by bytes) already resides
-- [ ] **SCHED-02**: When no GPU has input data loaded, task is routed to a GPU on the same NUMA node as the data's host memory
-- [ ] **SCHED-03**: Reservation tries preferred GPU first, then other GPUs; only waits on preferred GPU if no GPU can reserve
-- [ ] **SCHED-04**: Different pipelines of the same query can execute on different GPUs based on data locality
+- [x] **SCHED-01**: Task creator routes pipeline tasks to the GPU where the most input data (by bytes) already resides
+- [x] **SCHED-02**: When no GPU has input data loaded, task is routed to a GPU on the same NUMA node as the data's host memory
+- [x] **SCHED-03**: Reservation tries preferred GPU first, then other GPUs; only waits on preferred GPU if no GPU can reserve
+- [x] **SCHED-04**: Different pipelines of the same query can execute on different GPUs based on data locality
 - [ ] **SCHED-05**: Cross-GPU scan data routing — scan batches are distributed across GPUs based on available memory
 
 ### Memory Management
@@ -66,24 +66,24 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 1 | Complete |
 | FOUND-03 | Phase 1 | Complete |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Complete |
 | FOUND-05 | Phase 1 | Complete |
-| FOUND-06 | Phase 1 | Pending |
-| SCHED-01 | Phase 2 | Pending |
-| SCHED-02 | Phase 2 | Pending |
-| SCHED-03 | Phase 2 | Pending |
-| SCHED-04 | Phase 2 | Pending |
+| FOUND-06 | Phase 1 | Complete |
+| SCHED-01 | Phase 2 | Complete |
+| SCHED-02 | Phase 2 | Complete |
+| SCHED-03 | Phase 2 | Complete |
+| SCHED-04 | Phase 2 | Complete |
 | SCHED-05 | Phase 2 | Pending |
 | MEM-01 | Phase 3 | Pending |
 | MEM-02 | Phase 3 | Pending |
 | MEM-03 | Phase 1 | Complete |
 | MEM-04 | Phase 3 | Pending |
 | MEM-05 | Phase 3 | Pending |
-| CUCS-01 | Phase 1 | Pending |
-| CUCS-02 | Phase 1 | Pending |
+| CUCS-01 | Phase 1 | Complete |
+| CUCS-02 | Phase 1 | Complete |
 | CUCS-03 | Phase 1 | Complete |
 | CUCS-04 | Phase 1 | Complete |
 
