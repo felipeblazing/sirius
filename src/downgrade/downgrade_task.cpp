@@ -23,6 +23,7 @@
 
 #include <cucascade/data/cpu_data_representation.hpp>
 #include <cucascade/memory/common.hpp>
+#include <cucascade/memory/memory_reservation_manager.hpp>
 
 #include <chrono>
 
@@ -57,9 +58,13 @@ void downgrade_task::execute(rmm::cuda_stream_view stream)
   auto t_start   = std::chrono::steady_clock::now();
 
   try {
-    auto& mr_manager = _global_state->cast<downgrade_task_global_state>()._reservation_manager;
-    auto reservation = mr_manager.request_reservation(
-      cucascade::memory::any_memory_space_in_tier{cucascade::memory::Tier::HOST}, data_size);
+    auto& global      = _global_state->cast<downgrade_task_global_state>();
+    auto& mr_manager  = global._reservation_manager;
+    auto numa_pref    = global._numa_preferred_device_id;
+    auto reservation  = mr_manager.request_reservation(
+      cucascade::memory::any_memory_space_in_tier_with_preference{cucascade::memory::Tier::HOST,
+                                                                   numa_pref},
+      data_size);
     if (!reservation) {
       throw rmm::out_of_memory("Failed to allocate host memory for downgrade task.");
     }

@@ -166,6 +166,38 @@ void SiriusContext::initialize(const sirius::sirius_config& config)
     }
   }
 
+  // Enable peer-to-peer access between GPU pairs for optimal transfer bandwidth.
+  // cudaMemcpyPeerAsync works without this, but goes through host staging.
+  // With P2P enabled, NVLink/PCIe direct paths are used when available.
+  // NOTE: This is preparatory for Phase 3 MEM-04 (GPU-direct P2P transfer).
+  {
+    auto gpu_spaces = memory_manager_->get_memory_spaces_for_tier(cucascade::memory::Tier::GPU);
+    for (size_t i = 0; i < gpu_spaces.size(); ++i) {
+      for (size_t j = 0; j < gpu_spaces.size(); ++j) {
+        if (i == j) continue;
+        int src_id     = gpu_spaces[i]->get_device_id();
+        int dst_id     = gpu_spaces[j]->get_device_id();
+        int can_access = 0;
+        cudaDeviceCanAccessPeer(&can_access, src_id, dst_id);
+        if (can_access) {
+          cudaSetDevice(src_id);
+          auto err = cudaDeviceEnablePeerAccess(dst_id, 0);
+          if (err == cudaSuccess) {
+            SIRIUS_LOG_INFO("SiriusContext: P2P access enabled GPU {} -> GPU {}", src_id, dst_id);
+          } else if (err == cudaErrorPeerAccessAlreadyEnabled) {
+            cudaGetLastError();  // Clear the error
+          } else {
+            SIRIUS_LOG_WARN("SiriusContext: P2P access GPU {} -> GPU {} failed: {}",
+                            src_id,
+                            dst_id,
+                            cudaGetErrorString(err));
+            cudaGetLastError();  // Clear the error
+          }
+        }
+      }
+    }
+  }
+
   data_repository_manager_ = std::make_unique<cucascade::shared_data_repository_manager>();
 
   pipeline_executor_ = std::make_unique<sirius::pipeline::pipeline_executor>(
@@ -179,13 +211,22 @@ void SiriusContext::initialize(const sirius::sirius_config& config)
   auto create_executors_for_tier = [&](cucascade::memory::Tier tier) {
     auto spaces        = memory_manager_->get_memory_spaces_for_tier(tier);
     auto const& dg_cfg = config_.get_downgrade_executor_config();
+    auto const& topo   = config_.get_hw_topology();
     for (auto* space : spaces) {
+      std::optional<int> gpu_numa_node;
+      if (tier == cucascade::memory::Tier::GPU) {
+        auto dev_id = space->get_device_id();
+        if (dev_id >= 0 && static_cast<unsigned>(dev_id) < topo.gpus.size()) {
+          gpu_numa_node = topo.gpus[dev_id].numa_node;
+        }
+      }
       auto executor = std::make_unique<sirius::parallel::downgrade_executor>(
         dg_cfg,
         *data_repository_manager_,
         space->get_id(),
         const_cast<cucascade::memory::memory_space*>(space),
-        *memory_manager_);
+        *memory_manager_,
+        gpu_numa_node);
       executor->start();
       downgrade_executors_.push_back(std::move(executor));
     }
@@ -223,7 +264,14 @@ void SiriusContext::terminate()
   // returns immediately even when copies are still in-flight; without this
   // sync, the subsequent cudaFreeHost inside the memory manager destructor
   // can deadlock against a new cudaHostAlloc from the next SiriusContext.
-  cudaDeviceSynchronize();
+  // Iterate all GPU devices to synchronize each one (not just device 0).
+  {
+    auto gpu_spaces = memory_manager_->get_memory_spaces_for_tier(cucascade::memory::Tier::GPU);
+    for (const auto* space : gpu_spaces) {
+      cudaSetDevice(space->get_device_id());
+      cudaDeviceSynchronize();
+    }
+  }
 
   // Restore the previous cuDF pinned memory resource and threshold before destroying the
   // slab allocator — cuDF holds a non-owning reference and would dangle after reset().

@@ -34,13 +34,17 @@ downgrade_executor::downgrade_executor(
   cucascade::shared_data_repository_manager& data_repo_mgr,
   cucascade::memory::memory_space_id space_id,
   cucascade::memory::memory_space* memory_space,
-  sirius::memory::sirius_memory_reservation_manager& reservation_manager)
+  sirius::memory::sirius_memory_reservation_manager& reservation_manager,
+  std::optional<int> gpu_numa_node)
   : sirius::parallel::itask_executor(std::move(config)),
     _data_repo_mgr(data_repo_mgr),
     _space_id(space_id),
     _memory_space(memory_space),
     _reservation_manager(reservation_manager)
 {
+  if (gpu_numa_node.has_value() && gpu_numa_node.value() >= 0) {
+    _numa_preferred_device_id = static_cast<size_t>(gpu_numa_node.value());
+  }
   if (_memory_space) { cudaStreamCreateWithFlags(&_stream, cudaStreamNonBlocking); }
 }
 
@@ -250,7 +254,7 @@ size_t downgrade_executor::run_downgrade_pass(std::vector<downgrade_repository_i
   if (all_candidates.empty()) return 0;
 
   auto global_state = std::make_shared<downgrade_task_global_state>(
-    _reservation_manager, _data_repo_mgr, _message_queue);
+    _reservation_manager, _data_repo_mgr, _message_queue, _numa_preferred_device_id);
 
   size_t task_count = 0;
   for (auto& batch : all_candidates) {
