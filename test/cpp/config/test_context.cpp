@@ -36,6 +36,8 @@
 #include <set>
 #include <source_location>
 #include <string>
+#include <type_traits>
+#include <variant>
 
 namespace fs = std::filesystem;
 
@@ -179,8 +181,15 @@ TEST_CASE("reservation_manager_configurator builds N GPU spaces", "[multi_gpu_fo
   size_t gpu_count  = 0;
   size_t host_count = 0;
   for (auto const& cfg : configs) {
-    if (cfg.tier == cucascade::memory::Tier::GPU) { ++gpu_count; }
-    if (cfg.tier == cucascade::memory::Tier::HOST) { ++host_count; }
+    std::visit(
+      [&](auto const& c) {
+        using T = std::decay_t<decltype(c)>;
+        if constexpr (!std::is_same_v<T, std::monostate>) {
+          if (c.tier() == cucascade::memory::Tier::GPU) { ++gpu_count; }
+          if (c.tier() == cucascade::memory::Tier::HOST) { ++host_count; }
+        }
+      },
+      cfg);
   }
 
   REQUIRE(gpu_count == topology.num_gpus);
@@ -251,7 +260,10 @@ TEST_CASE("multi_gpu_config_two_gpus", "[.][multi_gpu_foundation]")
 {
   int device_count = 0;
   cudaGetDeviceCount(&device_count);
-  if (device_count < 2) { SKIP("requires 2+ GPUs"); }
+  if (device_count < 2) {
+    WARN("requires 2+ GPUs -- skipping");
+    return;
+  }
 
   sirius::converter_registry::reset_for_testing();
 

@@ -422,3 +422,165 @@ TEST_CASE("run_downgrade_pass skips batches already on HOST", "[downgrade_execut
 
   executor.stop();
 }
+
+// ---------------------------------------------------------------------------
+// NUMA-aware downgrade tests (Plan 01 validation)
+// ---------------------------------------------------------------------------
+
+TEST_CASE("numa_aware_downgrade_global_state_carries_preference",
+          "[downgrade][numa_aware_downgrade]")
+{
+  auto mem_mgr = make_test_memory_manager();
+  cucascade::shared_data_repository_manager repo_mgr;
+  sirius::task_completion_message_queue msg_queue;
+
+  // Create global state with NUMA preference set to device 0
+  auto with_pref =
+    std::make_shared<downgrade_task_global_state>(*mem_mgr, repo_mgr, msg_queue, std::optional<size_t>{0});
+  REQUIRE(with_pref->_numa_preferred_device_id.has_value());
+  REQUIRE(with_pref->_numa_preferred_device_id.value() == 0);
+
+  // Create global state without NUMA preference (default)
+  auto without_pref =
+    std::make_shared<downgrade_task_global_state>(*mem_mgr, repo_mgr, msg_queue, std::nullopt);
+  REQUIRE_FALSE(without_pref->_numa_preferred_device_id.has_value());
+
+  // Create global state using the default parameter (no 4th arg)
+  auto default_pref = std::make_shared<downgrade_task_global_state>(*mem_mgr, repo_mgr, msg_queue);
+  REQUIRE_FALSE(default_pref->_numa_preferred_device_id.has_value());
+}
+
+TEST_CASE("numa_aware_downgrade_executor_passes_numa_node", "[downgrade][numa_aware_downgrade]")
+{
+  auto mem_mgr    = make_test_memory_manager();
+  auto* gpu_space = get_gpu_space(*mem_mgr);
+  REQUIRE(gpu_space != nullptr);
+
+  cucascade::shared_data_repository_manager repo_mgr;
+
+  // Create executor with gpu_numa_node = 0 (NUMA-aware)
+  sirius::exec::thread_pool_config config{1, "downgrade_numa"};
+  downgrade_executor executor(config, repo_mgr, GPU_SPACE_ID, gpu_space, *mem_mgr, std::optional<int>{0});
+  executor.start();
+
+  // Create a GPU batch and schedule downgrade
+  cucascade::shared_data_repository repo;
+  auto batch = make_gpu_batch(*gpu_space);
+  repo.add_data_batch(batch);
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+
+  std::vector<downgrade_repository_info> repos = {{&repo}};
+  size_t scheduled                             = executor.run_downgrade_pass(repos, 1ull << 30);
+  REQUIRE(scheduled == 1);
+
+  // Wait for the batch to be downgraded to HOST
+  auto deadline = std::chrono::steady_clock::now() + 10s;
+  while (std::chrono::steady_clock::now() < deadline) {
+    if (batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST) break;
+    std::this_thread::sleep_for(50ms);
+  }
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST);
+
+  executor.stop();
+}
+
+TEST_CASE("downgrade_executor_default_numa_node_is_nullopt", "[downgrade][numa_aware_downgrade]")
+{
+  auto mem_mgr    = make_test_memory_manager();
+  auto* gpu_space = get_gpu_space(*mem_mgr);
+  REQUIRE(gpu_space != nullptr);
+
+  cucascade::shared_data_repository_manager repo_mgr;
+
+  // Create executor WITHOUT gpu_numa_node (backward-compatible default)
+  auto executor = make_test_executor(repo_mgr, gpu_space, *mem_mgr);
+  executor.start();
+
+  // Create a GPU batch and schedule downgrade
+  cucascade::shared_data_repository repo;
+  auto batch = make_gpu_batch(*gpu_space);
+  repo.add_data_batch(batch);
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+
+  std::vector<downgrade_repository_info> repos = {{&repo}};
+  size_t scheduled                             = executor.run_downgrade_pass(repos, 1ull << 30);
+  REQUIRE(scheduled == 1);
+
+  // Wait for the batch to be downgraded to HOST
+  auto deadline = std::chrono::steady_clock::now() + 10s;
+  while (std::chrono::steady_clock::now() < deadline) {
+    if (batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST) break;
+    std::this_thread::sleep_for(50ms);
+  }
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::HOST);
+
+  executor.stop();
+}
+
+TEST_CASE("gpu_to_gpu_transfer_via_converter", "[.][multi_gpu_transfer]")
+{
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    WARN("requires 2+ GPUs for cross-device transfer test -- skipping");
+    return;
+  }
+
+  sirius::converter_registry::reset_for_testing();
+
+  cucascade::memory::reservation_manager_configurator builder;
+  const size_t gpu_capacity  = 512ull << 20;  // 512 MB for test
+  const double limit_ratio   = 0.75;
+  const size_t host_capacity = 1ull << 30;
+
+  builder.set_number_of_gpus(2)
+    .set_gpu_usage_limit(gpu_capacity)
+    .set_reservation_fraction_per_gpu(limit_ratio)
+    .set_per_host_capacity(host_capacity)
+    .use_host_per_gpu()
+    .set_reservation_fraction_per_host(limit_ratio);
+
+  auto space_configs = builder.build();
+  auto mem_mgr =
+    std::make_unique<sirius::memory::sirius_memory_reservation_manager>(std::move(space_configs));
+  sirius::converter_registry::initialize();
+
+  auto gpu_spaces = mem_mgr->get_memory_spaces_for_tier(cucascade::memory::Tier::GPU);
+  REQUIRE(gpu_spaces.size() == 2);
+
+  auto* gpu0 = const_cast<cucascade::memory::memory_space*>(gpu_spaces[0]);
+  auto* gpu1 = const_cast<cucascade::memory::memory_space*>(gpu_spaces[1]);
+  REQUIRE(gpu0->get_device_id() != gpu1->get_device_id());
+
+  // Create a batch on GPU 0
+  auto batch = make_gpu_batch(*gpu0, 500);
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+  REQUIRE(batch->get_memory_space()->get_device_id() == gpu0->get_device_id());
+
+  // Convert batch from GPU 0 to GPU 1 via converter registry
+  auto& registry = sirius::converter_registry::get();
+  rmm::cuda_stream stream;
+
+  REQUIRE(batch->try_to_lock_for_in_transit());
+  batch->convert_to<cucascade::gpu_table_representation>(registry, gpu1, stream);
+  batch->try_to_release_in_transit();
+
+  // Verify the batch is now on GPU 1
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+  REQUIRE(batch->get_memory_space()->get_device_id() == gpu1->get_device_id());
+
+  // Convert back to GPU 0 and verify round-trip
+  REQUIRE(batch->try_to_lock_for_in_transit());
+  batch->convert_to<cucascade::gpu_table_representation>(registry, gpu0, stream);
+  batch->try_to_release_in_transit();
+
+  REQUIRE(batch->get_memory_space()->get_tier() == cucascade::memory::Tier::GPU);
+  REQUIRE(batch->get_memory_space()->get_device_id() == gpu0->get_device_id());
+
+  // Verify data integrity: the batch should still have valid data
+  REQUIRE(batch->get_data() != nullptr);
+  REQUIRE(batch->get_data()->get_size_in_bytes() > 0);
+
+  mem_mgr->shutdown();
+  sirius::converter_registry::shutdown();
+}
