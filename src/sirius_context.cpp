@@ -192,8 +192,8 @@ void SiriusContext::initialize(const sirius::sirius_config& config)
   };
   create_executors_for_tier(cucascade::memory::Tier::GPU);
 
-  task_creator_ = std::make_unique<sirius::creator::task_creator>(config_.get_task_creator_config(),
-                                                                  *memory_manager_);
+  task_creator_ = std::make_unique<sirius::creator::task_creator>(
+    config_.get_task_creator_config(), *memory_manager_, &config_.get_hw_topology());
   task_creator_->set_pipeline_executor(*pipeline_executor_);
   pipeline_executor_->set_task_creator(*task_creator_);
   task_creator_->start_thread_pool();
