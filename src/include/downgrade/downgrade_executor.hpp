@@ -31,6 +31,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -67,12 +68,23 @@ class downgrade_executor : public sirius::parallel::itask_executor {
    * monitor)
    * @param reservation_manager Reference to the memory reservation manager
    */
+  /**
+   * @param config Configuration for the task executor (thread count, etc.)
+   * @param data_repo_mgr Reference to the data repository manager
+   * @param space_id The memory space this executor is responsible for downgrading FROM
+   * @param memory_space Pointer to the memory space (for pressure queries; nullptr disables
+   * monitor)
+   * @param reservation_manager Reference to the memory reservation manager
+   * @param gpu_numa_node NUMA node of the GPU this executor downgrades from. Used to prefer
+   *        NUMA-local host memory when downgrading. nullopt or negative disables preference.
+   */
   explicit downgrade_executor(
     exec::thread_pool_config config,
     cucascade::shared_data_repository_manager& data_repo_mgr,
     cucascade::memory::memory_space_id space_id,
     cucascade::memory::memory_space* memory_space,
-    sirius::memory::sirius_memory_reservation_manager& reservation_manager);
+    sirius::memory::sirius_memory_reservation_manager& reservation_manager,
+    std::optional<int> gpu_numa_node = std::nullopt);
 
   ~downgrade_executor();
 
@@ -167,6 +179,7 @@ class downgrade_executor : public sirius::parallel::itask_executor {
   cucascade::memory::memory_space_id _space_id;
   cucascade::memory::memory_space* _memory_space;
   sirius::memory::sirius_memory_reservation_manager& _reservation_manager;
+  std::optional<size_t> _numa_preferred_device_id;  ///< Preferred HOST space device_id (NUMA node)
   task_completion_message_queue _message_queue;
 };
 

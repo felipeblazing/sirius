@@ -28,6 +28,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 namespace sirius {
 namespace parallel {
@@ -47,13 +48,23 @@ class downgrade_task_global_state : public itask_global_state {
    * @param data_repo_mgr Reference to the data repository manager for storing task outputs
    * @param message_queue Reference to the message queue for task completion notifications
    */
+  /**
+   * @param reservation_manager Reference to the memory reservation manager
+   * @param data_repo_mgr Reference to the data repository manager for storing task outputs
+   * @param message_queue Reference to the message queue for task completion notifications
+   * @param numa_preferred_device_id Preferred HOST memory space device_id (NUMA node) for
+   *        downgrade target selection. When set, the reservation request will prefer this
+   *        NUMA node. When nullopt, all HOST spaces are considered equally (single-GPU behavior).
+   */
   explicit downgrade_task_global_state(
     sirius::memory::sirius_memory_reservation_manager& reservation_manager,
     cucascade::shared_data_repository_manager& data_repo_mgr,
-    task_completion_message_queue& message_queue)
+    task_completion_message_queue& message_queue,
+    std::optional<size_t> numa_preferred_device_id = std::nullopt)
     : _reservation_manager(reservation_manager),
       _data_repo_mgr(data_repo_mgr),
-      _message_queue(message_queue)
+      _message_queue(message_queue),
+      _numa_preferred_device_id(numa_preferred_device_id)
   {
   }
 
@@ -62,6 +73,8 @@ class downgrade_task_global_state : public itask_global_state {
     _data_repo_mgr;  ///< Repository for storing and retrieving data batches
   task_completion_message_queue&
     _message_queue;  ///< Message queue to notify task_creator about task completion
+  std::optional<size_t>
+    _numa_preferred_device_id;  ///< Preferred HOST space device_id (NUMA node) for downgrades
 };
 
 /**
