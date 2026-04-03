@@ -767,3 +767,112 @@ TEST_CASE("gpu_to_gpu_transfer_via_converter", "[.][multi_gpu_transfer]")
   mem_mgr->shutdown();
   sirius::converter_registry::shutdown();
 }
+
+// ============================================================================
+// MEM-04: P2P Transfer Verification (requires 2+ GPUs)
+// ============================================================================
+
+TEST_CASE("p2p_transfer_converter_round_trip",
+          "[.][p2p_transfer_verification][multi_gpu]") {
+  // Verifies GPU-to-GPU transfer via cucascade converter with P2P when available.
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    SKIP("Requires 2+ GPUs");
+  }
+
+  int can_access = 0;
+  cudaDeviceCanAccessPeer(&can_access, 0, 1);
+  if (!can_access) {
+    SKIP("P2P not available between GPU 0 and GPU 1");
+  }
+
+  cudaSetDevice(0);
+  cudaDeviceEnablePeerAccess(1, 0);
+  cudaSetDevice(1);
+  cudaDeviceEnablePeerAccess(0, 0);
+
+  sirius::converter_registry::initialize();
+
+  auto configurator = cucascade::reservation_manager_configurator();
+  configurator.add_gpu_memory_space(0, 256 * 1024 * 1024);
+  configurator.add_gpu_memory_space(1, 256 * 1024 * 1024);
+  auto mem_mgr = configurator.build();
+
+  auto gpu0 = mem_mgr->get_memory_space(cucascade::memory::Tier::GPU, 0);
+  auto gpu1 = mem_mgr->get_memory_space(cucascade::memory::Tier::GPU, 1);
+  REQUIRE(gpu0 != nullptr);
+  REQUIRE(gpu1 != nullptr);
+
+  auto& registry = sirius::converter_registry::get_instance();
+
+  cudaSetDevice(0);
+  cudaStream_t stream;
+  cudaStreamCreate(&stream);
+
+  auto batch = sirius::test::create_test_data_batch(gpu0, 1000, stream);
+  REQUIRE(batch != nullptr);
+  REQUIRE(batch->get_memory_space()->get_device_id() == 0);
+  size_t original_size = batch->get_data()->get_size_in_bytes();
+
+  // GPU 0 -> GPU 1 (P2P path via cudaMemcpyPeerAsync)
+  REQUIRE(batch->try_to_lock_for_in_transit());
+  batch->convert_to<cucascade::gpu_table_representation>(registry, gpu1, stream);
+  batch->try_to_release_in_transit();
+  REQUIRE(batch->get_memory_space()->get_device_id() == 1);
+  REQUIRE(batch->get_data()->get_size_in_bytes() == original_size);
+
+  // GPU 1 -> GPU 0 (round trip)
+  REQUIRE(batch->try_to_lock_for_in_transit());
+  batch->convert_to<cucascade::gpu_table_representation>(registry, gpu0, stream);
+  batch->try_to_release_in_transit();
+  REQUIRE(batch->get_memory_space()->get_device_id() == 0);
+  REQUIRE(batch->get_data()->get_size_in_bytes() == original_size);
+
+  cudaStreamDestroy(stream);
+  mem_mgr->shutdown();
+  sirius::converter_registry::shutdown();
+
+  cudaSetDevice(0);
+  cudaDeviceDisablePeerAccess(1);
+  cudaSetDevice(1);
+  cudaDeviceDisablePeerAccess(0);
+}
+
+// ============================================================================
+// MEM-05: Scan Distribution Proportional to Available Memory
+// ============================================================================
+
+TEST_CASE("scan_distribution_memory_check",
+          "[.][scan_distribution][multi_gpu]") {
+  // Verifies that GPU memory spaces report different available memory
+  // when configured asymmetrically — prerequisite for proportional distribution.
+  int device_count = 0;
+  cudaGetDeviceCount(&device_count);
+  if (device_count < 2) {
+    SKIP("Requires 2+ GPUs");
+  }
+
+  auto configurator = cucascade::reservation_manager_configurator();
+  configurator.add_gpu_memory_space(0, 512 * 1024 * 1024);
+  configurator.add_gpu_memory_space(1, 256 * 1024 * 1024);
+  auto mem_mgr = configurator.build();
+
+  auto gpu0 = mem_mgr->get_memory_space(cucascade::memory::Tier::GPU, 0);
+  auto gpu1 = mem_mgr->get_memory_space(cucascade::memory::Tier::GPU, 1);
+  REQUIRE(gpu0 != nullptr);
+  REQUIRE(gpu1 != nullptr);
+
+  auto avail0 = gpu0->get_available_memory();
+  auto avail1 = gpu1->get_available_memory();
+
+  // GPU 0 should have more available memory than GPU 1
+  REQUIRE(avail0 > avail1);
+
+  // Ratio should be approximately 2:1
+  double ratio = static_cast<double>(avail0) / static_cast<double>(avail1);
+  REQUIRE(ratio > 1.5);
+  REQUIRE(ratio < 2.5);
+
+  mem_mgr->shutdown();
+}
