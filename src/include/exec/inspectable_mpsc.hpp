@@ -259,6 +259,33 @@ class inspectable_mpsc {
    * allowing state inspection that requires non-const access. Holds
    * the mutex for the full scan duration.
    */
+  /**
+   * \brief Visit queued elements in place, without popping.
+   * \param visitor Callable receiving T& (mutable) and returning bool:
+   *        true to continue the traversal, false to stop early. Must be
+   *        lightweight: the mutex is held for the whole traversal, blocking
+   *        push/pop.
+   * \param front_to_back If true, visits oldest-to-newest; if false,
+   *        newest-to-oldest.
+   *
+   * Used by the downgraded-task prefetcher to snapshot the input batches of
+   * the next few pending tasks in dispatch order (shared_ptr copies) without
+   * disturbing queue order the way a pop/re-push round trip would.
+   */
+  void for_each_mutable(const std::function<bool(T&)>& visitor, bool front_to_back)
+  {
+    std::unique_lock<std::mutex> lock(_mutex);
+    if (front_to_back) {
+      for (auto& item : _queue) {
+        if (!visitor(*item)) { return; }
+      }
+    } else {
+      for (auto rit = _queue.rbegin(); rit != _queue.rend(); ++rit) {
+        if (!visitor(**rit)) { return; }
+      }
+    }
+  }
+
   std::unique_ptr<T> mutable_pop_if(std::function<bool(T&)> predicate, bool front_to_back)
   {
     std::unique_lock<std::mutex> lock(_mutex);

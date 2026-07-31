@@ -1,0 +1,204 @@
+[2026-07-31 08:19:51.982] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=69 SQL: select sum(l_extendedprice * l_discount) as revenue from lineitem where l_shipdate >= date '1997-01-01' and l_shipdate < date '1998-01-01' and l_discount between 0.03 - 0.01 and 0.03 + 0.01 and l_quantity < 24
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:19:51.990] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=34 query=69 outcome=-
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=34 query=69 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=34 query=69 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:51.990] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:19:51.993] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0) -> PROJECTION (id=1) -> UNGROUPED_AGGREGATE (id=2)
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #1: MERGE_AGGREGATE (id=3)
+  Input: <- Pipeline #0 [on: MERGE_AGGREGATE (id=3), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #2: RESULT_COLLECTOR (id=4)
+  Input: <- Pipeline #1 [on: RESULT_COLLECTOR (id=4), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+
+=== Query Plan DAG ===
+┌────────────────────────────┐
+│ Pipeline #2                │
+│ RESULT_COLLECTOR (id=4)    │
+│ Input(#1): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #1                │
+│ MERGE_AGGREGATE (id=3)     │
+│ Input(#0): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #0                │
+│ UNGROUPED_AGGREGATE (id=2) │
+│ PROJECTION (id=1)          │
+│ GPU_SCAN (id=0)            │
+└────────────────────────────┘
+
+[2026-07-31 08:19:51.993] [info] [sirius_engine.cpp:148] query 34 telemetry_query=019fb74220387521b3afc0a20d439ba0
+[2026-07-31 08:19:51.993] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '0'
+[2026-07-31 08:19:51.993] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 1 connectors, min_free_fraction=0.40
+[2026-07-31 08:19:52.465] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:19:52.465] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:52.478] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=3)
+[2026-07-31 08:19:52.478] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=34 query=69 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:52.478] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=34 query=69 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:52.478] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=34 query=69 outcome=ok
+[2026-07-31 08:19:52.478] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:19:52.479] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=70 SQL: SET gpu_execution = true;
+[2026-07-31 08:19:52.480] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=71 SQL: select sum(l_extendedprice * l_discount) as revenue from lineitem where l_shipdate >= date '1997-01-01' and l_shipdate < date '1998-01-01' and l_discount between 0.03 - 0.01 and 0.03 + 0.01 and l_quantity < 24
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:19:52.487] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=35 query=71 outcome=-
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=35 query=71 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=35 query=71 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:52.487] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:19:52.489] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0) -> PROJECTION (id=1) -> UNGROUPED_AGGREGATE (id=2)
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #1: MERGE_AGGREGATE (id=3)
+  Input: <- Pipeline #0 [on: MERGE_AGGREGATE (id=3), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #2: RESULT_COLLECTOR (id=4)
+  Input: <- Pipeline #1 [on: RESULT_COLLECTOR (id=4), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+
+=== Query Plan DAG ===
+┌────────────────────────────┐
+│ Pipeline #2                │
+│ RESULT_COLLECTOR (id=4)    │
+│ Input(#1): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #1                │
+│ MERGE_AGGREGATE (id=3)     │
+│ Input(#0): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #0                │
+│ UNGROUPED_AGGREGATE (id=2) │
+│ PROJECTION (id=1)          │
+│ GPU_SCAN (id=0)            │
+└────────────────────────────┘
+
+[2026-07-31 08:19:52.489] [info] [sirius_engine.cpp:148] query 35 telemetry_query=019fb74222297a03a9d7d5c0d9bd0cc2
+[2026-07-31 08:19:52.489] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '0'
+[2026-07-31 08:19:52.490] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 1 connectors, min_free_fraction=0.40
+[2026-07-31 08:19:52.932] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:19:52.933] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:52.940] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=3)
+[2026-07-31 08:19:52.941] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=35 query=71 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:52.941] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=35 query=71 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:52.941] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=35 query=71 outcome=ok
+[2026-07-31 08:19:52.941] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:19:52.958] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=72 SQL: SET gpu_execution = true;
+[2026-07-31 08:19:52.958] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=73 SQL: select sum(l_extendedprice * l_discount) as revenue from lineitem where l_shipdate >= date '1997-01-01' and l_shipdate < date '1998-01-01' and l_discount between 0.03 - 0.01 and 0.03 + 0.01 and l_quantity < 24
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:19:52.965] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=36 query=73 outcome=-
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=36 query=73 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=36 query=73 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:52.965] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:19:52.968] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0) -> PROJECTION (id=1) -> UNGROUPED_AGGREGATE (id=2)
+  Output: -> MERGE_AGGREGATE [port: default, barrier: FULL]
+Pipeline #1: MERGE_AGGREGATE (id=3)
+  Input: <- Pipeline #0 [on: MERGE_AGGREGATE (id=3), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> RESULT_COLLECTOR [port: default, barrier: FULL]
+Pipeline #2: RESULT_COLLECTOR (id=4)
+  Input: <- Pipeline #1 [on: RESULT_COLLECTOR (id=4), port: default, barrier: FULL]
+  Dependencies: Pipeline #1
+
+=== Query Plan DAG ===
+┌────────────────────────────┐
+│ Pipeline #2                │
+│ RESULT_COLLECTOR (id=4)    │
+│ Input(#1): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #1                │
+│ MERGE_AGGREGATE (id=3)     │
+│ Input(#0): FULL            │
+└─────────────┬──────────────┘
+              │               
+┌────────────────────────────┐
+│ Pipeline #0                │
+│ UNGROUPED_AGGREGATE (id=2) │
+│ PROJECTION (id=1)          │
+│ GPU_SCAN (id=0)            │
+└────────────────────────────┘
+
+[2026-07-31 08:19:52.968] [info] [sirius_engine.cpp:148] query 36 telemetry_query=019fb742240870638bebe9113ea47655
+[2026-07-31 08:19:52.968] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '0'
+[2026-07-31 08:19:52.968] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 1 connectors, min_free_fraction=0.40
+[2026-07-31 08:19:53.411] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:19:53.411] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:53.423] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=3)
+[2026-07-31 08:19:53.423] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=36 query=73 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:53.423] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=36 query=73 allocated=48890613760 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:53.423] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=36 query=73 outcome=ok
+[2026-07-31 08:19:53.423] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:19:53.430] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=74 SQL: CALL unpin_table('lineitem')
+[2026-07-31 08:19:53.431] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=75 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/supplier/*.parquet', tier='gpu', name='supplier', cols=['s_suppkey','s_nationkey'])
+[2026-07-31 08:19:53.431] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=37 query=75 outcome=-
+[2026-07-31 08:19:53.431] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=37 query=75 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:53.431] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=37 query=75 allocated=0 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:53.431] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:19:53.431] [warning] [sirius_extension.cpp:1348] [pin_table] 'supplier': pin_table_compression is enabled but no plan file was found in '/home/nvidia/felipe/sirius/.claude/worktrees/combo-prefetch-comp/bench_out/plans_gpu_facts'; pinning uncompressed
+[2026-07-31 08:19:53.435] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=37 query=75 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=37 query=75 allocated=82500096 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=37 query=75 outcome=ok
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=76 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/lineitem/*.parquet', tier='gpu', name='lineitem', cols=['l_suppkey','l_orderkey','l_shipdate','l_extendedprice','l_discount'])
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=38 query=76 outcome=-
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=38 query=76 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=38 query=76 allocated=82500096 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:53.444] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:19:53.445] [info] [sirius_extension.cpp:1338] [pin_table] 'lineitem' tier=gpu: compressing with plan for 5 column(s)
+[2026-07-31 08:19:57.225] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:57.236] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=38 query=76 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.236] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=38 query=76 allocated=59397500416 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.236] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=38 query=76 outcome=ok
+[2026-07-31 08:19:57.237] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=77 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/orders/*.parquet', tier='gpu', name='orders', cols=['o_orderkey','o_custkey'])
+[2026-07-31 08:19:57.237] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=39 query=77 outcome=-
+[2026-07-31 08:19:57.237] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=39 query=77 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.237] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=39 query=77 allocated=59397500416 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.237] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:19:57.238] [info] [sirius_extension.cpp:1338] [pin_table] 'orders' tier=gpu: compressing with plan for 2 column(s)
+[2026-07-31 08:19:57.691] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:57.699] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=39 query=77 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.699] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=39 query=77 allocated=64773494016 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.699] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=39 query=77 outcome=ok
+[2026-07-31 08:19:57.700] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=78 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/customer/*.parquet', tier='gpu', name='customer', cols=['c_custkey','c_nationkey'])
+[2026-07-31 08:19:57.700] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=40 query=78 outcome=-
+[2026-07-31 08:19:57.700] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=40 query=78 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.700] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=40 query=78 allocated=64773494016 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.700] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:19:57.700] [warning] [sirius_extension.cpp:1348] [pin_table] 'customer': pin_table_compression is enabled but no plan file was found in '/home/nvidia/felipe/sirius/.claude/worktrees/combo-prefetch-comp/bench_out/plans_gpu_facts'; pinning uncompressed
+[2026-07-31 08:19:57.718] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:57.729] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=40 query=78 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.729] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=40 query=78 allocated=66010994432 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.729] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=40 query=78 outcome=ok
+[2026-07-31 08:19:57.729] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=79 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/nation/*.parquet', tier='gpu', name='nation', cols=['n_nationkey','n_name'])
+[2026-07-31 08:19:57.730] [info] [sirius_context.cpp:416] [window] begin instance=0xfd127512aa00 connection=1 window=41 query=79 outcome=-
+[2026-07-31 08:19:57.730] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xfd127512aa00 connection=1 window=41 query=79 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.730] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xfd127512aa00 connection=1 window=41 query=79 allocated=66010994432 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.730] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:19:57.730] [warning] [sirius_extension.cpp:1348] [pin_table] 'nation': pin_table_compression is enabled but no plan file was found in '/home/nvidia/felipe/sirius/.claude/worktrees/combo-prefetch-comp/bench_out/plans_gpu_facts'; pinning uncompressed
+[2026-07-31 08:19:57.732] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:19:57.739] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xfd127512aa00 connection=1 window=41 query=79 allocated=17515413504 bytes peak=30802968576 bytes free_blocks=2875
+[2026-07-31 08:19:57.739] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xfd127512aa00 connection=1 window=41 query=79 allocated=66010995712 bytes peak=182435009372 bytes reserved=0 bytes
+[2026-07-31 08:19:57.739] [info] [sirius_context.cpp:416] [window] end instance=0xfd127512aa00 connection=1 window=41 query=79 outcome=ok
+[2026-07-31 08:19:57.740] [info] [sirius_context.cpp:225] QueryBegin: instance=0xfd127512aa00 connection=1 query=80 SQL: SET gpu_execution = true;

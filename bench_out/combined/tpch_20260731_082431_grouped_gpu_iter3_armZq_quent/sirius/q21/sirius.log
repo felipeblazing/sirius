@@ -1,0 +1,1194 @@
+[2026-07-31 08:26:31.065] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=321 SQL: select s.s_name, count(*) as numwait from supplier s, lineitem l1, orders o, nation n where s.s_suppkey = l1.l_suppkey and o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F' and l1.l_receiptdate > l1.l_commitdate and exists ( select * from lineitem l2 where l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey ) and not exists ( select * from lineitem l3 where l3.l_orderkey = l1.l_orderkey and l3.l_suppkey <> l1.l_suppkey and l3.l_receiptdate > l3.l_commitdate ) and s.s_nationkey = n.n_nationkey and n.n_name = 'BRAZIL' group by s.s_name order by numwait desc, s.s_name limit 100
+[2026-07-31 08:26:31.088] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf535830).
+[2026-07-31 08:26:31.088] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:31.088] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0e0e210).
+[2026-07-31 08:26:31.088] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:31.089] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0f43980).
+[2026-07-31 08:26:31.089] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:31.089] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0d08d80).
+[2026-07-31 08:26:31.089] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:31.089] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:26:31.089] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:416] [window] begin instance=0xe921ed12aa80 connection=1 window=131 query=321 outcome=-
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=131 query=321 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=131 query=321 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:31.089] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:26:31.096] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf535830).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0e0e210).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0f43980).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0d08d80).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:31.096] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:31.097] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=1)
+  Input: <- Pipeline #0 [on: PARTITION (id=1), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=2)
+  Input: <- Pipeline #1 [on: CONCAT (id=2), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #3: GPU_SCAN (id=3) -> DYNAMIC_FILTER (id=4)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=5)
+  Input: <- Pipeline #3 [on: PARTITION (id=5), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=6)
+  Input: <- Pipeline #4 [on: CONCAT (id=6), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #6: HASH_JOIN (id=7)
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=7), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=7), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=8)
+  Input: <- Pipeline #6 [on: PARTITION (id=8), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=9)
+  Input: <- Pipeline #7 [on: CONCAT (id=9), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #9: GPU_SCAN (id=10)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=11)
+  Input: <- Pipeline #9 [on: PARTITION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=12)
+  Input: <- Pipeline #10 [on: CONCAT (id=12), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #12: GPU_SCAN (id=13) -> DYNAMIC_FILTER (id=14) -> FILTER (id=15)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=16)
+  Input: <- Pipeline #12 [on: PARTITION (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=17)
+  Input: <- Pipeline #13 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #15: HASH_JOIN (id=18)
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=18), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #11, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=19)
+  Input: <- Pipeline #15 [on: PARTITION (id=19), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=20)
+  Input: <- Pipeline #16 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #18: HASH_JOIN (id=21)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=21), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #8, Pipeline #17
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #19: RIGHT_DELIM_JOIN (id=22)
+  Input: <- Pipeline #18 [on: RIGHT_DELIM_JOIN (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: PARTITION (id=23)
+  Input: <- Pipeline #19 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #21: CONCAT (id=24)
+  Input: <- Pipeline #20 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #20
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #22: HASH_GROUP_BY (id=25)
+  Input: <- Pipeline #19 [on: HASH_GROUP_BY (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #23: PARTITION (id=26)
+  Input: <- Pipeline #22 [on: PARTITION (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #24: MERGE_GROUP_BY (id=27)
+  Input: <- Pipeline #23 [on: MERGE_GROUP_BY (id=27), port: default, barrier: FULL]
+  Dependencies: Pipeline #23
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #25: PARTITION (id=28)
+  Input: <- Pipeline #24 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #24
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #26: CONCAT (id=29)
+  Input: <- Pipeline #25 [on: CONCAT (id=29), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #25
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #27: GPU_SCAN (id=30)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #28: PARTITION (id=31)
+  Input: <- Pipeline #27 [on: PARTITION (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #27
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #29: CONCAT (id=32)
+  Input: <- Pipeline #28 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #28
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #30: HASH_JOIN (id=33) -> PROJECTION (id=34)
+  Input: <- Pipeline #26 [on: HASH_JOIN (id=33), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #29 [on: HASH_JOIN (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #26, Pipeline #29
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #31: PARTITION (id=35)
+  Input: <- Pipeline #30 [on: PARTITION (id=35), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #30
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #32: CONCAT (id=36)
+  Input: <- Pipeline #31 [on: CONCAT (id=36), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #31
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #33: HASH_JOIN (id=37)
+  Input: <- Pipeline #32 [on: HASH_JOIN (id=37), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #21 [on: HASH_JOIN (id=37), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #21, Pipeline #32
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #34: RIGHT_DELIM_JOIN (id=38)
+  Input: <- Pipeline #33 [on: RIGHT_DELIM_JOIN (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #33
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #35: PARTITION (id=39)
+  Input: <- Pipeline #34 [on: PARTITION (id=39), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #36: CONCAT (id=40)
+  Input: <- Pipeline #35 [on: CONCAT (id=40), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #35
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #37: HASH_GROUP_BY (id=41)
+  Input: <- Pipeline #34 [on: HASH_GROUP_BY (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #38: PARTITION (id=42)
+  Input: <- Pipeline #37 [on: PARTITION (id=42), port: default, barrier: FULL]
+  Dependencies: Pipeline #37
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #39: MERGE_GROUP_BY (id=43)
+  Input: <- Pipeline #38 [on: MERGE_GROUP_BY (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #38
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #40: PARTITION (id=44)
+  Input: <- Pipeline #39 [on: PARTITION (id=44), port: default, barrier: FULL]
+  Dependencies: Pipeline #39
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #41: CONCAT (id=45)
+  Input: <- Pipeline #40 [on: CONCAT (id=45), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #40
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #42: GPU_SCAN (id=46) -> DYNAMIC_FILTER (id=47) -> FILTER (id=48)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #43: PARTITION (id=49)
+  Input: <- Pipeline #42 [on: PARTITION (id=49), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #42
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #44: CONCAT (id=50)
+  Input: <- Pipeline #43 [on: CONCAT (id=50), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #43
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #45: HASH_JOIN (id=51) -> PROJECTION (id=52)
+  Input: <- Pipeline #41 [on: HASH_JOIN (id=51), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #44 [on: HASH_JOIN (id=51), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #41, Pipeline #44
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #46: PARTITION (id=53)
+  Input: <- Pipeline #45 [on: PARTITION (id=53), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #45
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #47: CONCAT (id=54)
+  Input: <- Pipeline #46 [on: CONCAT (id=54), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #46
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #48: HASH_JOIN (id=55) -> HASH_GROUP_BY (id=56)
+  Input: <- Pipeline #47 [on: HASH_JOIN (id=55), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #36 [on: HASH_JOIN (id=55), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #36, Pipeline #47
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #49: PARTITION (id=57)
+  Input: <- Pipeline #48 [on: PARTITION (id=57), port: default, barrier: FULL]
+  Dependencies: Pipeline #48
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #50: MERGE_GROUP_BY (id=58) -> TOP_N (id=59)
+  Input: <- Pipeline #49 [on: MERGE_GROUP_BY (id=58), port: default, barrier: FULL]
+  Dependencies: Pipeline #49
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #51: MERGE_TOP_N (id=60) -> RESULT_COLLECTOR (id=61)
+  Input: <- Pipeline #50 [on: MERGE_TOP_N (id=60), port: default, barrier: FULL]
+  Dependencies: Pipeline #50
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #51             │                                                                                                                                                                                                    
+│ RESULT_COLLECTOR (id=61) │                                                                                                                                                                                                    
+│ MERGE_TOP_N (id=60)      │                                                                                                                                                                                                    
+│ Input(#50): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #50             │                                                                                                                                                                                                    
+│ TOP_N (id=59)            │                                                                                                                                                                                                    
+│ MERGE_GROUP_BY (id=58)   │                                                                                                                                                                                                    
+│ Input(#49): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #49             │                                                                                                                                                                                                    
+│ PARTITION (id=57)        │                                                                                                                                                                                                    
+│ Input(#48): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #48             │                                                                                                                                                                                                    
+│ HASH_GROUP_BY (id=56)    │                                                                                                                                                                                                    
+│ HASH_JOIN (id=55)        │                                                                                                                                                                                                    
+│   type: RIGHT_ANTI       │                                                                                                                                                                                                    
+│ Input(#47): PARTIAL      │                                                                                                                                                                                                    
+│ Input(#36): PARTIAL      │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                          
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #36             │                                                                                                                                            │ Pipeline #47             │                            
+│ CONCAT (id=40)           │                                                                                                                                            │ CONCAT (id=54)           │                            
+│ Input(#35): PARTIAL      │                                                                                                                                            │ Input(#46): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #35             │                                                                                                                                            │ Pipeline #46             │                            
+│ PARTITION (id=39)        │                                                                                                                                            │ PARTITION (id=53)        │                            
+│ Input(#34): FULL         │                                                                                                                                            │ Input(#45): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #34             │                                                                                                                                            │ Pipeline #45             │                            
+│ RIGHT_DELIM_JOIN (id=38) │                                                                                                                                            │ PROJECTION (id=52)       │                            
+│ Input(#33): FULL         │                                                                                                                                            │ HASH_JOIN (id=51)        │                            
+│                          │                                                                                                                                            │   type: INNER            │                            
+│                          │                                                                                                                                            │ Input(#41): PARTIAL      │                            
+│                          │                                                                                                                                            │ Input(#44): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       ┌───────────────────────────┐              
+             │                                                                                                                                                                       │                           │              
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #33             │                                                                                                                                            │ Pipeline #41             ││ Pipeline #44             │
+│ HASH_JOIN (id=37)        │                                                                                                                                            │ CONCAT (id=45)           ││ CONCAT (id=50)           │
+│   type: RIGHT_SEMI       │                                                                                                                                            │ Input(#40): PARTIAL      ││ Input(#43): PARTIAL      │
+│ Input(#32): PARTIAL      │                                                                                                                                            │                          ││                          │
+│ Input(#21): PARTIAL      │                                                                                                                                            │                          ││                          │
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘└────────────┬─────────────┘
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                                       │                           │              
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #21             │                                                                                    │ Pipeline #32             │                            │ Pipeline #40             ││ Pipeline #43             │
+│ CONCAT (id=24)           │                                                                                    │ CONCAT (id=36)           │                            │ PARTITION (id=44)        ││ PARTITION (id=49)        │
+│ Input(#20): PARTIAL      │                                                                                    │ Input(#31): PARTIAL      │                            │ Input(#39): FULL         ││ Input(#42): PARTIAL      │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #20             │                                                                                    │ Pipeline #31             │                            │ Pipeline #39             ││ Pipeline #42             │
+│ PARTITION (id=23)        │                                                                                    │ PARTITION (id=35)        │                            │ MERGE_GROUP_BY (id=43)   ││ FILTER (id=48)           │
+│ Input(#19): FULL         │                                                                                    │ Input(#30): PARTIAL      │                            │ Input(#38): FULL         ││ DYNAMIC_FILTER (id=47)   │
+│                          │                                                                                    │                          │                            │                          ││ GPU_SCAN (id=46)         │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘
+             │                                                                                                               │                                                       │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #19             │                                                                                    │ Pipeline #30             │                            │ Pipeline #38             │                            
+│ RIGHT_DELIM_JOIN (id=22) │                                                                                    │ PROJECTION (id=34)       │                            │ PARTITION (id=42)        │                            
+│ Input(#18): FULL         │                                                                                    │ HASH_JOIN (id=33)        │                            │ Input(#37): FULL         │                            
+│                          │                                                                                    │   type: INNER            │                            │                          │                            
+│                          │                                                                                    │ Input(#26): PARTIAL      │                            │                          │                            
+│                          │                                                                                    │ Input(#29): PARTIAL      │                            │                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                                                                               ┌───────────────────────────┐                           │                                          
+             │                                                                                                               │                           │                           │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #18             │                                                                                    │ Pipeline #26             ││ Pipeline #29             ││ Pipeline #37             │                            
+│ HASH_JOIN (id=21)        │                                                                                    │ CONCAT (id=29)           ││ CONCAT (id=32)           ││ HASH_GROUP_BY (id=41)    │                            
+│   type: INNER            │                                                                                    │ Input(#25): PARTIAL      ││ Input(#28): PARTIAL      ││ Input(#34): FULL         │                            
+│ Input(#8): PARTIAL       │                                                                                    │                          ││                          ││                          │                            
+│ Input(#17): PARTIAL      │                                                                                    │                          ││                          ││                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             ┌───────────────────────────────────────────────────────┐                                                       │                           │                           │                                          
+             │                                                       │                                                       │                           │                           │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #8              │                            │ Pipeline #17             │                            │ Pipeline #25             ││ Pipeline #28             ││ (-> Pipeline #34)        │                            
+│ CONCAT (id=9)            │                            │ CONCAT (id=20)           │                            │ PARTITION (id=28)        ││ PARTITION (id=31)        ││                          │                            
+│ Input(#7): PARTIAL       │                            │ Input(#16): PARTIAL      │                            │ Input(#24): FULL         ││ Input(#27): PARTIAL      ││                          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             │                                                       │                                                       │                           │                                                                      
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐                                                        
+│ Pipeline #7              │                            │ Pipeline #16             │                            │ Pipeline #24             ││ Pipeline #27             │                                                        
+│ PARTITION (id=8)         │                            │ PARTITION (id=19)        │                            │ MERGE_GROUP_BY (id=27)   ││ GPU_SCAN (id=30)         │                                                        
+│ Input(#6): FULL          │                            │ Input(#15): PARTIAL      │                            │ Input(#23): FULL         ││                          │                                                        
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘                                                        
+             │                                                       │                                                       │                                                                                                  
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                    
+│ Pipeline #6              │                            │ Pipeline #15             │                            │ Pipeline #23             │                                                                                    
+│ HASH_JOIN (id=7)         │                            │ HASH_JOIN (id=18)        │                            │ PARTITION (id=26)        │                                                                                    
+│   type: INNER            │                            │   type: INNER            │                            │ Input(#22): FULL         │                                                                                    
+│ Input(#2): PARTIAL       │                            │ Input(#11): PARTIAL      │                            │                          │                                                                                    
+│ Input(#5): PARTIAL       │                            │ Input(#14): PARTIAL      │                            │                          │                                                                                    
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────┐                           ┌───────────────────────────┐                           │                                                                                                  
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #2              ││ Pipeline #5              ││ Pipeline #11             ││ Pipeline #14             ││ Pipeline #22             │                                                                                    
+│ CONCAT (id=2)            ││ CONCAT (id=6)            ││ CONCAT (id=12)           ││ CONCAT (id=17)           ││ HASH_GROUP_BY (id=25)    │                                                                                    
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       ││ Input(#10): PARTIAL      ││ Input(#13): PARTIAL      ││ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #1              ││ Pipeline #4              ││ Pipeline #10             ││ Pipeline #13             ││ (-> Pipeline #19)        │                                                                                    
+│ PARTITION (id=1)         ││ PARTITION (id=5)         ││ PARTITION (id=11)        ││ PARTITION (id=16)        ││                          │                                                                                    
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       ││ Input(#9): FULL          ││ Input(#12): PARTIAL      ││                          │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #0              ││ Pipeline #3              ││ Pipeline #9              ││ Pipeline #12             │                                                                                                                
+│ GPU_SCAN (id=0)          ││ DYNAMIC_FILTER (id=4)    ││ GPU_SCAN (id=10)         ││ FILTER (id=15)           │                                                                                                                
+│                          ││ GPU_SCAN (id=3)          ││                          ││ DYNAMIC_FILTER (id=14)   │                                                                                                                
+│                          ││                          ││                          ││ GPU_SCAN (id=13)         │                                                                                                                
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘                                                                                                                
+
+[2026-07-31 08:26:31.097] [info] [sirius_engine.cpp:148] query 131 telemetry_query=019fb74837397ca19df0bb3755e80323
+[2026-07-31 08:26:31.097] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'nation' to operator '0'
+[2026-07-31 08:26:31.097] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '3'
+[2026-07-31 08:26:31.098] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'orders' to operator '10'
+[2026-07-31 08:26:31.098] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '13'
+[2026-07-31 08:26:31.098] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '30'
+[2026-07-31 08:26:31.098] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '46'
+[2026-07-31 08:26:31.098] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 6 connectors, min_free_fraction=0.40
+[2026-07-31 08:26:31.099] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (1 build rows, 1 keys).
+[2026-07-31 08:26:31.100] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:31.101] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (399867 build rows, 1 keys).
+[2026-07-31 08:26:31.497] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:31.497] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:32.364] [warning] [gpu_pipeline_task.cpp:63] gpu_pipeline_task: operator 'RIGHT_DELIM_JOIN' (id=38) output batch 0 column count mismatch: got 3, expected 1
+[2026-07-31 08:26:33.182] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:26:33.182] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:26:33.186] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=721)
+[2026-07-31 08:26:33.186] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=131 query=321 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:33.186] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=131 query=321 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:33.186] [info] [sirius_context.cpp:416] [window] end instance=0xe921ed12aa80 connection=1 window=131 query=321 outcome=ok
+[2026-07-31 08:26:33.186] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:26:33.189] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=322 SQL: CALL sirius_set_query_label('q21_iter1')
+[2026-07-31 08:26:33.189] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=323 SQL: SET gpu_execution = true;
+[2026-07-31 08:26:33.189] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=324 SQL: select s.s_name, count(*) as numwait from supplier s, lineitem l1, orders o, nation n where s.s_suppkey = l1.l_suppkey and o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F' and l1.l_receiptdate > l1.l_commitdate and exists ( select * from lineitem l2 where l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey ) and not exists ( select * from lineitem l3 where l3.l_orderkey = l1.l_orderkey and l3.l_suppkey <> l1.l_suppkey and l3.l_receiptdate > l3.l_commitdate ) and s.s_nationkey = n.n_nationkey and n.n_name = 'BRAZIL' group by s.s_name order by numwait desc, s.s_name limit 100
+[2026-07-31 08:26:33.213] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0c26b30).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf0e08c0).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf4bbf60).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0e3b6d0).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:33.213] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:26:33.214] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:416] [window] begin instance=0xe921ed12aa80 connection=1 window=132 query=324 outcome=-
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=132 query=324 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=132 query=324 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:33.214] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:26:33.220] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0c26b30).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf0e08c0).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf4bbf60).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0e3b6d0).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:33.221] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:33.222] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=1)
+  Input: <- Pipeline #0 [on: PARTITION (id=1), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=2)
+  Input: <- Pipeline #1 [on: CONCAT (id=2), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #3: GPU_SCAN (id=3) -> DYNAMIC_FILTER (id=4)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=5)
+  Input: <- Pipeline #3 [on: PARTITION (id=5), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=6)
+  Input: <- Pipeline #4 [on: CONCAT (id=6), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #6: HASH_JOIN (id=7)
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=7), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=7), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=8)
+  Input: <- Pipeline #6 [on: PARTITION (id=8), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=9)
+  Input: <- Pipeline #7 [on: CONCAT (id=9), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #9: GPU_SCAN (id=10)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=11)
+  Input: <- Pipeline #9 [on: PARTITION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=12)
+  Input: <- Pipeline #10 [on: CONCAT (id=12), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #12: GPU_SCAN (id=13) -> DYNAMIC_FILTER (id=14) -> FILTER (id=15)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=16)
+  Input: <- Pipeline #12 [on: PARTITION (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=17)
+  Input: <- Pipeline #13 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #15: HASH_JOIN (id=18)
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=18), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #11, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=19)
+  Input: <- Pipeline #15 [on: PARTITION (id=19), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=20)
+  Input: <- Pipeline #16 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #18: HASH_JOIN (id=21)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=21), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #8, Pipeline #17
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #19: RIGHT_DELIM_JOIN (id=22)
+  Input: <- Pipeline #18 [on: RIGHT_DELIM_JOIN (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: PARTITION (id=23)
+  Input: <- Pipeline #19 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #21: CONCAT (id=24)
+  Input: <- Pipeline #20 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #20
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #22: HASH_GROUP_BY (id=25)
+  Input: <- Pipeline #19 [on: HASH_GROUP_BY (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #23: PARTITION (id=26)
+  Input: <- Pipeline #22 [on: PARTITION (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #24: MERGE_GROUP_BY (id=27)
+  Input: <- Pipeline #23 [on: MERGE_GROUP_BY (id=27), port: default, barrier: FULL]
+  Dependencies: Pipeline #23
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #25: PARTITION (id=28)
+  Input: <- Pipeline #24 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #24
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #26: CONCAT (id=29)
+  Input: <- Pipeline #25 [on: CONCAT (id=29), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #25
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #27: GPU_SCAN (id=30)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #28: PARTITION (id=31)
+  Input: <- Pipeline #27 [on: PARTITION (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #27
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #29: CONCAT (id=32)
+  Input: <- Pipeline #28 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #28
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #30: HASH_JOIN (id=33) -> PROJECTION (id=34)
+  Input: <- Pipeline #26 [on: HASH_JOIN (id=33), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #29 [on: HASH_JOIN (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #26, Pipeline #29
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #31: PARTITION (id=35)
+  Input: <- Pipeline #30 [on: PARTITION (id=35), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #30
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #32: CONCAT (id=36)
+  Input: <- Pipeline #31 [on: CONCAT (id=36), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #31
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #33: HASH_JOIN (id=37)
+  Input: <- Pipeline #32 [on: HASH_JOIN (id=37), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #21 [on: HASH_JOIN (id=37), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #21, Pipeline #32
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #34: RIGHT_DELIM_JOIN (id=38)
+  Input: <- Pipeline #33 [on: RIGHT_DELIM_JOIN (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #33
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #35: PARTITION (id=39)
+  Input: <- Pipeline #34 [on: PARTITION (id=39), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #36: CONCAT (id=40)
+  Input: <- Pipeline #35 [on: CONCAT (id=40), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #35
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #37: HASH_GROUP_BY (id=41)
+  Input: <- Pipeline #34 [on: HASH_GROUP_BY (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #38: PARTITION (id=42)
+  Input: <- Pipeline #37 [on: PARTITION (id=42), port: default, barrier: FULL]
+  Dependencies: Pipeline #37
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #39: MERGE_GROUP_BY (id=43)
+  Input: <- Pipeline #38 [on: MERGE_GROUP_BY (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #38
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #40: PARTITION (id=44)
+  Input: <- Pipeline #39 [on: PARTITION (id=44), port: default, barrier: FULL]
+  Dependencies: Pipeline #39
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #41: CONCAT (id=45)
+  Input: <- Pipeline #40 [on: CONCAT (id=45), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #40
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #42: GPU_SCAN (id=46) -> DYNAMIC_FILTER (id=47) -> FILTER (id=48)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #43: PARTITION (id=49)
+  Input: <- Pipeline #42 [on: PARTITION (id=49), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #42
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #44: CONCAT (id=50)
+  Input: <- Pipeline #43 [on: CONCAT (id=50), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #43
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #45: HASH_JOIN (id=51) -> PROJECTION (id=52)
+  Input: <- Pipeline #41 [on: HASH_JOIN (id=51), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #44 [on: HASH_JOIN (id=51), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #41, Pipeline #44
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #46: PARTITION (id=53)
+  Input: <- Pipeline #45 [on: PARTITION (id=53), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #45
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #47: CONCAT (id=54)
+  Input: <- Pipeline #46 [on: CONCAT (id=54), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #46
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #48: HASH_JOIN (id=55) -> HASH_GROUP_BY (id=56)
+  Input: <- Pipeline #47 [on: HASH_JOIN (id=55), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #36 [on: HASH_JOIN (id=55), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #36, Pipeline #47
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #49: PARTITION (id=57)
+  Input: <- Pipeline #48 [on: PARTITION (id=57), port: default, barrier: FULL]
+  Dependencies: Pipeline #48
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #50: MERGE_GROUP_BY (id=58) -> TOP_N (id=59)
+  Input: <- Pipeline #49 [on: MERGE_GROUP_BY (id=58), port: default, barrier: FULL]
+  Dependencies: Pipeline #49
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #51: MERGE_TOP_N (id=60) -> RESULT_COLLECTOR (id=61)
+  Input: <- Pipeline #50 [on: MERGE_TOP_N (id=60), port: default, barrier: FULL]
+  Dependencies: Pipeline #50
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #51             │                                                                                                                                                                                                    
+│ RESULT_COLLECTOR (id=61) │                                                                                                                                                                                                    
+│ MERGE_TOP_N (id=60)      │                                                                                                                                                                                                    
+│ Input(#50): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #50             │                                                                                                                                                                                                    
+│ TOP_N (id=59)            │                                                                                                                                                                                                    
+│ MERGE_GROUP_BY (id=58)   │                                                                                                                                                                                                    
+│ Input(#49): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #49             │                                                                                                                                                                                                    
+│ PARTITION (id=57)        │                                                                                                                                                                                                    
+│ Input(#48): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #48             │                                                                                                                                                                                                    
+│ HASH_GROUP_BY (id=56)    │                                                                                                                                                                                                    
+│ HASH_JOIN (id=55)        │                                                                                                                                                                                                    
+│   type: RIGHT_ANTI       │                                                                                                                                                                                                    
+│ Input(#47): PARTIAL      │                                                                                                                                                                                                    
+│ Input(#36): PARTIAL      │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                          
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #36             │                                                                                                                                            │ Pipeline #47             │                            
+│ CONCAT (id=40)           │                                                                                                                                            │ CONCAT (id=54)           │                            
+│ Input(#35): PARTIAL      │                                                                                                                                            │ Input(#46): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #35             │                                                                                                                                            │ Pipeline #46             │                            
+│ PARTITION (id=39)        │                                                                                                                                            │ PARTITION (id=53)        │                            
+│ Input(#34): FULL         │                                                                                                                                            │ Input(#45): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #34             │                                                                                                                                            │ Pipeline #45             │                            
+│ RIGHT_DELIM_JOIN (id=38) │                                                                                                                                            │ PROJECTION (id=52)       │                            
+│ Input(#33): FULL         │                                                                                                                                            │ HASH_JOIN (id=51)        │                            
+│                          │                                                                                                                                            │   type: INNER            │                            
+│                          │                                                                                                                                            │ Input(#41): PARTIAL      │                            
+│                          │                                                                                                                                            │ Input(#44): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       ┌───────────────────────────┐              
+             │                                                                                                                                                                       │                           │              
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #33             │                                                                                                                                            │ Pipeline #41             ││ Pipeline #44             │
+│ HASH_JOIN (id=37)        │                                                                                                                                            │ CONCAT (id=45)           ││ CONCAT (id=50)           │
+│   type: RIGHT_SEMI       │                                                                                                                                            │ Input(#40): PARTIAL      ││ Input(#43): PARTIAL      │
+│ Input(#32): PARTIAL      │                                                                                                                                            │                          ││                          │
+│ Input(#21): PARTIAL      │                                                                                                                                            │                          ││                          │
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘└────────────┬─────────────┘
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                                       │                           │              
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #21             │                                                                                    │ Pipeline #32             │                            │ Pipeline #40             ││ Pipeline #43             │
+│ CONCAT (id=24)           │                                                                                    │ CONCAT (id=36)           │                            │ PARTITION (id=44)        ││ PARTITION (id=49)        │
+│ Input(#20): PARTIAL      │                                                                                    │ Input(#31): PARTIAL      │                            │ Input(#39): FULL         ││ Input(#42): PARTIAL      │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #20             │                                                                                    │ Pipeline #31             │                            │ Pipeline #39             ││ Pipeline #42             │
+│ PARTITION (id=23)        │                                                                                    │ PARTITION (id=35)        │                            │ MERGE_GROUP_BY (id=43)   ││ FILTER (id=48)           │
+│ Input(#19): FULL         │                                                                                    │ Input(#30): PARTIAL      │                            │ Input(#38): FULL         ││ DYNAMIC_FILTER (id=47)   │
+│                          │                                                                                    │                          │                            │                          ││ GPU_SCAN (id=46)         │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘
+             │                                                                                                               │                                                       │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #19             │                                                                                    │ Pipeline #30             │                            │ Pipeline #38             │                            
+│ RIGHT_DELIM_JOIN (id=22) │                                                                                    │ PROJECTION (id=34)       │                            │ PARTITION (id=42)        │                            
+│ Input(#18): FULL         │                                                                                    │ HASH_JOIN (id=33)        │                            │ Input(#37): FULL         │                            
+│                          │                                                                                    │   type: INNER            │                            │                          │                            
+│                          │                                                                                    │ Input(#26): PARTIAL      │                            │                          │                            
+│                          │                                                                                    │ Input(#29): PARTIAL      │                            │                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                                                                               ┌───────────────────────────┐                           │                                          
+             │                                                                                                               │                           │                           │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #18             │                                                                                    │ Pipeline #26             ││ Pipeline #29             ││ Pipeline #37             │                            
+│ HASH_JOIN (id=21)        │                                                                                    │ CONCAT (id=29)           ││ CONCAT (id=32)           ││ HASH_GROUP_BY (id=41)    │                            
+│   type: INNER            │                                                                                    │ Input(#25): PARTIAL      ││ Input(#28): PARTIAL      ││ Input(#34): FULL         │                            
+│ Input(#8): PARTIAL       │                                                                                    │                          ││                          ││                          │                            
+│ Input(#17): PARTIAL      │                                                                                    │                          ││                          ││                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             ┌───────────────────────────────────────────────────────┐                                                       │                           │                           │                                          
+             │                                                       │                                                       │                           │                           │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #8              │                            │ Pipeline #17             │                            │ Pipeline #25             ││ Pipeline #28             ││ (-> Pipeline #34)        │                            
+│ CONCAT (id=9)            │                            │ CONCAT (id=20)           │                            │ PARTITION (id=28)        ││ PARTITION (id=31)        ││                          │                            
+│ Input(#7): PARTIAL       │                            │ Input(#16): PARTIAL      │                            │ Input(#24): FULL         ││ Input(#27): PARTIAL      ││                          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             │                                                       │                                                       │                           │                                                                      
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐                                                        
+│ Pipeline #7              │                            │ Pipeline #16             │                            │ Pipeline #24             ││ Pipeline #27             │                                                        
+│ PARTITION (id=8)         │                            │ PARTITION (id=19)        │                            │ MERGE_GROUP_BY (id=27)   ││ GPU_SCAN (id=30)         │                                                        
+│ Input(#6): FULL          │                            │ Input(#15): PARTIAL      │                            │ Input(#23): FULL         ││                          │                                                        
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘                                                        
+             │                                                       │                                                       │                                                                                                  
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                    
+│ Pipeline #6              │                            │ Pipeline #15             │                            │ Pipeline #23             │                                                                                    
+│ HASH_JOIN (id=7)         │                            │ HASH_JOIN (id=18)        │                            │ PARTITION (id=26)        │                                                                                    
+│   type: INNER            │                            │   type: INNER            │                            │ Input(#22): FULL         │                                                                                    
+│ Input(#2): PARTIAL       │                            │ Input(#11): PARTIAL      │                            │                          │                                                                                    
+│ Input(#5): PARTIAL       │                            │ Input(#14): PARTIAL      │                            │                          │                                                                                    
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────┐                           ┌───────────────────────────┐                           │                                                                                                  
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #2              ││ Pipeline #5              ││ Pipeline #11             ││ Pipeline #14             ││ Pipeline #22             │                                                                                    
+│ CONCAT (id=2)            ││ CONCAT (id=6)            ││ CONCAT (id=12)           ││ CONCAT (id=17)           ││ HASH_GROUP_BY (id=25)    │                                                                                    
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       ││ Input(#10): PARTIAL      ││ Input(#13): PARTIAL      ││ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #1              ││ Pipeline #4              ││ Pipeline #10             ││ Pipeline #13             ││ (-> Pipeline #19)        │                                                                                    
+│ PARTITION (id=1)         ││ PARTITION (id=5)         ││ PARTITION (id=11)        ││ PARTITION (id=16)        ││                          │                                                                                    
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       ││ Input(#9): FULL          ││ Input(#12): PARTIAL      ││                          │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #0              ││ Pipeline #3              ││ Pipeline #9              ││ Pipeline #12             │                                                                                                                
+│ GPU_SCAN (id=0)          ││ DYNAMIC_FILTER (id=4)    ││ GPU_SCAN (id=10)         ││ FILTER (id=15)           │                                                                                                                
+│                          ││ GPU_SCAN (id=3)          ││                          ││ DYNAMIC_FILTER (id=14)   │                                                                                                                
+│                          ││                          ││                          ││ GPU_SCAN (id=13)         │                                                                                                                
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘                                                                                                                
+
+[2026-07-31 08:26:33.222] [info] [sirius_engine.cpp:148] query 132 telemetry_query=019fb7483f8578b09647baf809289501
+[2026-07-31 08:26:33.222] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'nation' to operator '0'
+[2026-07-31 08:26:33.222] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '3'
+[2026-07-31 08:26:33.222] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'orders' to operator '10'
+[2026-07-31 08:26:33.222] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '13'
+[2026-07-31 08:26:33.223] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '30'
+[2026-07-31 08:26:33.223] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '46'
+[2026-07-31 08:26:33.223] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 6 connectors, min_free_fraction=0.40
+[2026-07-31 08:26:33.224] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (1 build rows, 1 keys).
+[2026-07-31 08:26:33.225] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:33.226] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (399867 build rows, 1 keys).
+[2026-07-31 08:26:33.621] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:33.621] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:34.514] [warning] [gpu_pipeline_task.cpp:63] gpu_pipeline_task: operator 'RIGHT_DELIM_JOIN' (id=38) output batch 0 column count mismatch: got 3, expected 1
+[2026-07-31 08:26:35.373] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:26:35.373] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:26:35.379] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=721)
+[2026-07-31 08:26:35.379] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=132 query=324 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:35.379] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=132 query=324 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:35.379] [info] [sirius_context.cpp:416] [window] end instance=0xe921ed12aa80 connection=1 window=132 query=324 outcome=ok
+[2026-07-31 08:26:35.379] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:26:35.385] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=325 SQL: CALL sirius_set_query_label('q21_iter2')
+[2026-07-31 08:26:35.385] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=326 SQL: SET gpu_execution = true;
+[2026-07-31 08:26:35.385] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=327 SQL: select s.s_name, count(*) as numwait from supplier s, lineitem l1, orders o, nation n where s.s_suppkey = l1.l_suppkey and o.o_orderkey = l1.l_orderkey and o.o_orderstatus = 'F' and l1.l_receiptdate > l1.l_commitdate and exists ( select * from lineitem l2 where l2.l_orderkey = l1.l_orderkey and l2.l_suppkey <> l1.l_suppkey ) and not exists ( select * from lineitem l3 where l3.l_orderkey = l1.l_orderkey and l3.l_suppkey <> l1.l_suppkey and l3.l_receiptdate > l3.l_commitdate ) and s.s_nationkey = n.n_nationkey and n.n_name = 'BRAZIL' group by s.s_name order by numwait desc, s.s_name limit 100
+[2026-07-31 08:26:35.409] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf557120).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d160a9d0).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0adbc30).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d148d920).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:35.409] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:1244] Transparent execution: Sirius physical plan generated successfully
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:1272] Transparent execution: physical plan replaced with GPU operator
+[2026-07-31 08:26:35.410] [info] [physical_sirius_execution.cpp:155] Transparent GPU execution: executing query
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:416] [window] begin instance=0xe921ed12aa80 connection=1 window=133 query=327 outcome=-
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=133 query=327 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=133 query=327 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:35.410] [info] [sirius_context.cpp:285] QueryBegin: transparent_execution
+[2026-07-31 08:26:35.416] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9cf557120).
+[2026-07-31 08:26:35.416] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 0 rows).
+[2026-07-31 08:26:35.416] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d160a9d0).
+[2026-07-31 08:26:35.416] [info] [sirius_plan_comparison_join.cpp:547] [sirius_plan_comparison_join] Not wiring dynamic filter(s): build side is unfiltered (build est 0 rows).
+[2026-07-31 08:26:35.416] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d0adbc30).
+[2026-07-31 08:26:35.416] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 1499999460 rows).
+[2026-07-31 08:26:35.417] [info] [sirius_plan_get.cpp:498] [sirius_plan_get] LogicalGet has dynamic_filters attached (channel key=0xc7e9d148d920).
+[2026-07-31 08:26:35.417] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 25 rows).
+[2026-07-31 08:26:35.417] [info] [sirius_plan_comparison_join.cpp:608] [sirius_plan_comparison_join] Wired hash join with 1 dynamic-filter probe target(s) (build est 10000000 rows).
+[2026-07-31 08:26:35.418] [info] [sirius_engine.cpp:265] Query Plan:
+=== Pipeline Overview ===
+Pipeline #0: GPU_SCAN (id=0)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #1: PARTITION (id=1)
+  Input: <- Pipeline #0 [on: PARTITION (id=1), port: default, barrier: FULL]
+  Dependencies: Pipeline #0
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #2: CONCAT (id=2)
+  Input: <- Pipeline #1 [on: CONCAT (id=2), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #1
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #3: GPU_SCAN (id=3) -> DYNAMIC_FILTER (id=4)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #4: PARTITION (id=5)
+  Input: <- Pipeline #3 [on: PARTITION (id=5), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #3
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #5: CONCAT (id=6)
+  Input: <- Pipeline #4 [on: CONCAT (id=6), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #4
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #6: HASH_JOIN (id=7)
+  Input: <- Pipeline #2 [on: HASH_JOIN (id=7), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #5 [on: HASH_JOIN (id=7), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #2, Pipeline #5
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #7: PARTITION (id=8)
+  Input: <- Pipeline #6 [on: PARTITION (id=8), port: default, barrier: FULL]
+  Dependencies: Pipeline #6
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #8: CONCAT (id=9)
+  Input: <- Pipeline #7 [on: CONCAT (id=9), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #7
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #9: GPU_SCAN (id=10)
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #10: PARTITION (id=11)
+  Input: <- Pipeline #9 [on: PARTITION (id=11), port: default, barrier: FULL]
+  Dependencies: Pipeline #9
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #11: CONCAT (id=12)
+  Input: <- Pipeline #10 [on: CONCAT (id=12), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #10
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #12: GPU_SCAN (id=13) -> DYNAMIC_FILTER (id=14) -> FILTER (id=15)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #13: PARTITION (id=16)
+  Input: <- Pipeline #12 [on: PARTITION (id=16), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #12
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #14: CONCAT (id=17)
+  Input: <- Pipeline #13 [on: CONCAT (id=17), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #13
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #15: HASH_JOIN (id=18)
+  Input: <- Pipeline #11 [on: HASH_JOIN (id=18), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #14 [on: HASH_JOIN (id=18), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #11, Pipeline #14
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #16: PARTITION (id=19)
+  Input: <- Pipeline #15 [on: PARTITION (id=19), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #15
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #17: CONCAT (id=20)
+  Input: <- Pipeline #16 [on: CONCAT (id=20), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #16
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #18: HASH_JOIN (id=21)
+  Input: <- Pipeline #8 [on: HASH_JOIN (id=21), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #17 [on: HASH_JOIN (id=21), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #8, Pipeline #17
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #19: RIGHT_DELIM_JOIN (id=22)
+  Input: <- Pipeline #18 [on: RIGHT_DELIM_JOIN (id=22), port: default, barrier: FULL]
+  Dependencies: Pipeline #18
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #20: PARTITION (id=23)
+  Input: <- Pipeline #19 [on: PARTITION (id=23), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #21: CONCAT (id=24)
+  Input: <- Pipeline #20 [on: CONCAT (id=24), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #20
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #22: HASH_GROUP_BY (id=25)
+  Input: <- Pipeline #19 [on: HASH_GROUP_BY (id=25), port: default, barrier: FULL]
+  Dependencies: Pipeline #19
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #23: PARTITION (id=26)
+  Input: <- Pipeline #22 [on: PARTITION (id=26), port: default, barrier: FULL]
+  Dependencies: Pipeline #22
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #24: MERGE_GROUP_BY (id=27)
+  Input: <- Pipeline #23 [on: MERGE_GROUP_BY (id=27), port: default, barrier: FULL]
+  Dependencies: Pipeline #23
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #25: PARTITION (id=28)
+  Input: <- Pipeline #24 [on: PARTITION (id=28), port: default, barrier: FULL]
+  Dependencies: Pipeline #24
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #26: CONCAT (id=29)
+  Input: <- Pipeline #25 [on: CONCAT (id=29), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #25
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #27: GPU_SCAN (id=30)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #28: PARTITION (id=31)
+  Input: <- Pipeline #27 [on: PARTITION (id=31), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #27
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #29: CONCAT (id=32)
+  Input: <- Pipeline #28 [on: CONCAT (id=32), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #28
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #30: HASH_JOIN (id=33) -> PROJECTION (id=34)
+  Input: <- Pipeline #26 [on: HASH_JOIN (id=33), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #29 [on: HASH_JOIN (id=33), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #26, Pipeline #29
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #31: PARTITION (id=35)
+  Input: <- Pipeline #30 [on: PARTITION (id=35), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #30
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #32: CONCAT (id=36)
+  Input: <- Pipeline #31 [on: CONCAT (id=36), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #31
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #33: HASH_JOIN (id=37)
+  Input: <- Pipeline #32 [on: HASH_JOIN (id=37), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #21 [on: HASH_JOIN (id=37), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #21, Pipeline #32
+  Output: -> RIGHT_DELIM_JOIN [port: default, barrier: FULL]
+Pipeline #34: RIGHT_DELIM_JOIN (id=38)
+  Input: <- Pipeline #33 [on: RIGHT_DELIM_JOIN (id=38), port: default, barrier: FULL]
+  Dependencies: Pipeline #33
+  Output: -> PARTITION [port: default, barrier: FULL]
+  Output: -> HASH_GROUP_BY [port: default, barrier: FULL]
+Pipeline #35: PARTITION (id=39)
+  Input: <- Pipeline #34 [on: PARTITION (id=39), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #36: CONCAT (id=40)
+  Input: <- Pipeline #35 [on: CONCAT (id=40), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #35
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #37: HASH_GROUP_BY (id=41)
+  Input: <- Pipeline #34 [on: HASH_GROUP_BY (id=41), port: default, barrier: FULL]
+  Dependencies: Pipeline #34
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #38: PARTITION (id=42)
+  Input: <- Pipeline #37 [on: PARTITION (id=42), port: default, barrier: FULL]
+  Dependencies: Pipeline #37
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #39: MERGE_GROUP_BY (id=43)
+  Input: <- Pipeline #38 [on: MERGE_GROUP_BY (id=43), port: default, barrier: FULL]
+  Dependencies: Pipeline #38
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #40: PARTITION (id=44)
+  Input: <- Pipeline #39 [on: PARTITION (id=44), port: default, barrier: FULL]
+  Dependencies: Pipeline #39
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #41: CONCAT (id=45)
+  Input: <- Pipeline #40 [on: CONCAT (id=45), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #40
+  Output: -> HASH_JOIN [port: build, barrier: PARTIAL]
+Pipeline #42: GPU_SCAN (id=46) -> DYNAMIC_FILTER (id=47) -> FILTER (id=48)
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #43: PARTITION (id=49)
+  Input: <- Pipeline #42 [on: PARTITION (id=49), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #42
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #44: CONCAT (id=50)
+  Input: <- Pipeline #43 [on: CONCAT (id=50), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #43
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #45: HASH_JOIN (id=51) -> PROJECTION (id=52)
+  Input: <- Pipeline #41 [on: HASH_JOIN (id=51), port: build, barrier: PARTIAL]
+  Input: <- Pipeline #44 [on: HASH_JOIN (id=51), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #41, Pipeline #44
+  Output: -> PARTITION [port: default, barrier: PARTIAL]
+Pipeline #46: PARTITION (id=53)
+  Input: <- Pipeline #45 [on: PARTITION (id=53), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #45
+  Output: -> CONCAT [port: default, barrier: PARTIAL]
+Pipeline #47: CONCAT (id=54)
+  Input: <- Pipeline #46 [on: CONCAT (id=54), port: default, barrier: PARTIAL]
+  Dependencies: Pipeline #46
+  Output: -> HASH_JOIN [port: default, barrier: PARTIAL]
+Pipeline #48: HASH_JOIN (id=55) -> HASH_GROUP_BY (id=56)
+  Input: <- Pipeline #47 [on: HASH_JOIN (id=55), port: default, barrier: PARTIAL]
+  Input: <- Pipeline #36 [on: HASH_JOIN (id=55), port: build, barrier: PARTIAL]
+  Dependencies: Pipeline #36, Pipeline #47
+  Output: -> PARTITION [port: default, barrier: FULL]
+Pipeline #49: PARTITION (id=57)
+  Input: <- Pipeline #48 [on: PARTITION (id=57), port: default, barrier: FULL]
+  Dependencies: Pipeline #48
+  Output: -> MERGE_GROUP_BY [port: default, barrier: FULL]
+Pipeline #50: MERGE_GROUP_BY (id=58) -> TOP_N (id=59)
+  Input: <- Pipeline #49 [on: MERGE_GROUP_BY (id=58), port: default, barrier: FULL]
+  Dependencies: Pipeline #49
+  Output: -> MERGE_TOP_N [port: default, barrier: FULL]
+Pipeline #51: MERGE_TOP_N (id=60) -> RESULT_COLLECTOR (id=61)
+  Input: <- Pipeline #50 [on: MERGE_TOP_N (id=60), port: default, barrier: FULL]
+  Dependencies: Pipeline #50
+
+=== Query Plan DAG ===
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #51             │                                                                                                                                                                                                    
+│ RESULT_COLLECTOR (id=61) │                                                                                                                                                                                                    
+│ MERGE_TOP_N (id=60)      │                                                                                                                                                                                                    
+│ Input(#50): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #50             │                                                                                                                                                                                                    
+│ TOP_N (id=59)            │                                                                                                                                                                                                    
+│ MERGE_GROUP_BY (id=58)   │                                                                                                                                                                                                    
+│ Input(#49): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #49             │                                                                                                                                                                                                    
+│ PARTITION (id=57)        │                                                                                                                                                                                                    
+│ Input(#48): FULL         │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             │                                                                                                                                                                                                                  
+┌──────────────────────────┐                                                                                                                                                                                                    
+│ Pipeline #48             │                                                                                                                                                                                                    
+│ HASH_GROUP_BY (id=56)    │                                                                                                                                                                                                    
+│ HASH_JOIN (id=55)        │                                                                                                                                                                                                    
+│   type: RIGHT_ANTI       │                                                                                                                                                                                                    
+│ Input(#47): PARTIAL      │                                                                                                                                                                                                    
+│ Input(#36): PARTIAL      │                                                                                                                                                                                                    
+└────────────┬─────────────┘                                                                                                                                                                                                    
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                          
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #36             │                                                                                                                                            │ Pipeline #47             │                            
+│ CONCAT (id=40)           │                                                                                                                                            │ CONCAT (id=54)           │                            
+│ Input(#35): PARTIAL      │                                                                                                                                            │ Input(#46): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #35             │                                                                                                                                            │ Pipeline #46             │                            
+│ PARTITION (id=39)        │                                                                                                                                            │ PARTITION (id=53)        │                            
+│ Input(#34): FULL         │                                                                                                                                            │ Input(#45): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       │                                          
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐                            
+│ Pipeline #34             │                                                                                                                                            │ Pipeline #45             │                            
+│ RIGHT_DELIM_JOIN (id=38) │                                                                                                                                            │ PROJECTION (id=52)       │                            
+│ Input(#33): FULL         │                                                                                                                                            │ HASH_JOIN (id=51)        │                            
+│                          │                                                                                                                                            │   type: INNER            │                            
+│                          │                                                                                                                                            │ Input(#41): PARTIAL      │                            
+│                          │                                                                                                                                            │ Input(#44): PARTIAL      │                            
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘                            
+             │                                                                                                                                                                       ┌───────────────────────────┐              
+             │                                                                                                                                                                       │                           │              
+┌──────────────────────────┐                                                                                                                                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #33             │                                                                                                                                            │ Pipeline #41             ││ Pipeline #44             │
+│ HASH_JOIN (id=37)        │                                                                                                                                            │ CONCAT (id=45)           ││ CONCAT (id=50)           │
+│   type: RIGHT_SEMI       │                                                                                                                                            │ Input(#40): PARTIAL      ││ Input(#43): PARTIAL      │
+│ Input(#32): PARTIAL      │                                                                                                                                            │                          ││                          │
+│ Input(#21): PARTIAL      │                                                                                                                                            │                          ││                          │
+└────────────┬─────────────┘                                                                                                                                            └────────────┬─────────────┘└────────────┬─────────────┘
+             ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────┐                                                       │                           │              
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #21             │                                                                                    │ Pipeline #32             │                            │ Pipeline #40             ││ Pipeline #43             │
+│ CONCAT (id=24)           │                                                                                    │ CONCAT (id=36)           │                            │ PARTITION (id=44)        ││ PARTITION (id=49)        │
+│ Input(#20): PARTIAL      │                                                                                    │ Input(#31): PARTIAL      │                            │ Input(#39): FULL         ││ Input(#42): PARTIAL      │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘
+             │                                                                                                               │                                                       │                           │              
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐
+│ Pipeline #20             │                                                                                    │ Pipeline #31             │                            │ Pipeline #39             ││ Pipeline #42             │
+│ PARTITION (id=23)        │                                                                                    │ PARTITION (id=35)        │                            │ MERGE_GROUP_BY (id=43)   ││ FILTER (id=48)           │
+│ Input(#19): FULL         │                                                                                    │ Input(#30): PARTIAL      │                            │ Input(#38): FULL         ││ DYNAMIC_FILTER (id=47)   │
+│                          │                                                                                    │                          │                            │                          ││ GPU_SCAN (id=46)         │
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘
+             │                                                                                                               │                                                       │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐                            ┌──────────────────────────┐                            
+│ Pipeline #19             │                                                                                    │ Pipeline #30             │                            │ Pipeline #38             │                            
+│ RIGHT_DELIM_JOIN (id=22) │                                                                                    │ PROJECTION (id=34)       │                            │ PARTITION (id=42)        │                            
+│ Input(#18): FULL         │                                                                                    │ HASH_JOIN (id=33)        │                            │ Input(#37): FULL         │                            
+│                          │                                                                                    │   type: INNER            │                            │                          │                            
+│                          │                                                                                    │ Input(#26): PARTIAL      │                            │                          │                            
+│                          │                                                                                    │ Input(#29): PARTIAL      │                            │                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘                            └────────────┬─────────────┘                            
+             │                                                                                                               ┌───────────────────────────┐                           │                                          
+             │                                                                                                               │                           │                           │                                          
+┌──────────────────────────┐                                                                                    ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #18             │                                                                                    │ Pipeline #26             ││ Pipeline #29             ││ Pipeline #37             │                            
+│ HASH_JOIN (id=21)        │                                                                                    │ CONCAT (id=29)           ││ CONCAT (id=32)           ││ HASH_GROUP_BY (id=41)    │                            
+│   type: INNER            │                                                                                    │ Input(#25): PARTIAL      ││ Input(#28): PARTIAL      ││ Input(#34): FULL         │                            
+│ Input(#8): PARTIAL       │                                                                                    │                          ││                          ││                          │                            
+│ Input(#17): PARTIAL      │                                                                                    │                          ││                          ││                          │                            
+└────────────┬─────────────┘                                                                                    └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             ┌───────────────────────────────────────────────────────┐                                                       │                           │                           │                                          
+             │                                                       │                                                       │                           │                           │                                          
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                            
+│ Pipeline #8              │                            │ Pipeline #17             │                            │ Pipeline #25             ││ Pipeline #28             ││ (-> Pipeline #34)        │                            
+│ CONCAT (id=9)            │                            │ CONCAT (id=20)           │                            │ PARTITION (id=28)        ││ PARTITION (id=31)        ││                          │                            
+│ Input(#7): PARTIAL       │                            │ Input(#16): PARTIAL      │                            │ Input(#24): FULL         ││ Input(#27): PARTIAL      ││                          │                            
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                            
+             │                                                       │                                                       │                           │                                                                      
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐┌──────────────────────────┐                                                        
+│ Pipeline #7              │                            │ Pipeline #16             │                            │ Pipeline #24             ││ Pipeline #27             │                                                        
+│ PARTITION (id=8)         │                            │ PARTITION (id=19)        │                            │ MERGE_GROUP_BY (id=27)   ││ GPU_SCAN (id=30)         │                                                        
+│ Input(#6): FULL          │                            │ Input(#15): PARTIAL      │                            │ Input(#23): FULL         ││                          │                                                        
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘└──────────────────────────┘                                                        
+             │                                                       │                                                       │                                                                                                  
+┌──────────────────────────┐                            ┌──────────────────────────┐                            ┌──────────────────────────┐                                                                                    
+│ Pipeline #6              │                            │ Pipeline #15             │                            │ Pipeline #23             │                                                                                    
+│ HASH_JOIN (id=7)         │                            │ HASH_JOIN (id=18)        │                            │ PARTITION (id=26)        │                                                                                    
+│   type: INNER            │                            │   type: INNER            │                            │ Input(#22): FULL         │                                                                                    
+│ Input(#2): PARTIAL       │                            │ Input(#11): PARTIAL      │                            │                          │                                                                                    
+│ Input(#5): PARTIAL       │                            │ Input(#14): PARTIAL      │                            │                          │                                                                                    
+└────────────┬─────────────┘                            └────────────┬─────────────┘                            └────────────┬─────────────┘                                                                                    
+             ┌───────────────────────────┐                           ┌───────────────────────────┐                           │                                                                                                  
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #2              ││ Pipeline #5              ││ Pipeline #11             ││ Pipeline #14             ││ Pipeline #22             │                                                                                    
+│ CONCAT (id=2)            ││ CONCAT (id=6)            ││ CONCAT (id=12)           ││ CONCAT (id=17)           ││ HASH_GROUP_BY (id=25)    │                                                                                    
+│ Input(#1): PARTIAL       ││ Input(#4): PARTIAL       ││ Input(#10): PARTIAL      ││ Input(#13): PARTIAL      ││ Input(#19): FULL         │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                           │                                                                                                  
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                    
+│ Pipeline #1              ││ Pipeline #4              ││ Pipeline #10             ││ Pipeline #13             ││ (-> Pipeline #19)        │                                                                                    
+│ PARTITION (id=1)         ││ PARTITION (id=5)         ││ PARTITION (id=11)        ││ PARTITION (id=16)        ││                          │                                                                                    
+│ Input(#0): FULL          ││ Input(#3): PARTIAL       ││ Input(#9): FULL          ││ Input(#12): PARTIAL      ││                          │                                                                                    
+└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘└────────────┬─────────────┘                                                                                    
+             │                           │                           │                           │                                                                                                                              
+┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐┌──────────────────────────┐                                                                                                                
+│ Pipeline #0              ││ Pipeline #3              ││ Pipeline #9              ││ Pipeline #12             │                                                                                                                
+│ GPU_SCAN (id=0)          ││ DYNAMIC_FILTER (id=4)    ││ GPU_SCAN (id=10)         ││ FILTER (id=15)           │                                                                                                                
+│                          ││ GPU_SCAN (id=3)          ││                          ││ DYNAMIC_FILTER (id=14)   │                                                                                                                
+│                          ││                          ││                          ││ GPU_SCAN (id=13)         │                                                                                                                
+└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘└──────────────────────────┘                                                                                                                
+
+[2026-07-31 08:26:35.418] [info] [sirius_engine.cpp:148] query 133 telemetry_query=019fb74848197af1a747f2f10a55b5b8
+[2026-07-31 08:26:35.418] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'nation' to operator '0'
+[2026-07-31 08:26:35.418] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'supplier' to operator '3'
+[2026-07-31 08:26:35.418] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'orders' to operator '10'
+[2026-07-31 08:26:35.418] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '13'
+[2026-07-31 08:26:35.419] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '30'
+[2026-07-31 08:26:35.419] [info] [sirius_scan_manager.cpp:1494] [sirius_scan_manager] assigned pinned entry 'lineitem' to operator '46'
+[2026-07-31 08:26:35.419] [info] [memory_prefetcher.cpp:52] [memory_prefetcher] started: 3 threads, 6 connectors, min_free_fraction=0.40
+[2026-07-31 08:26:35.420] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (1 build rows, 1 keys).
+[2026-07-31 08:26:35.421] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:35.422] [info] [dynamic_filter_publisher.cpp:338] [sirius_physical_hash_join] Pushed 1 dynamic filter(s) across 1 active target(s) of 1 wired target(s) (399867 build rows, 1 keys).
+[2026-07-31 08:26:35.816] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:35.817] [warning] [sirius_physical_partition.cpp:304] slot_for_device: device_id 0 not found in active GPU list, falling back to slot 0
+[2026-07-31 08:26:36.711] [warning] [gpu_pipeline_task.cpp:63] gpu_pipeline_task: operator 'RIGHT_DELIM_JOIN' (id=38) output batch 0 column count mismatch: got 3, expected 1
+[2026-07-31 08:26:37.574] [info] [gpu_pipeline_executor.cpp:129] GPU Pipeline Executor: task queue interrupted, stopping manager loop
+[2026-07-31 08:26:37.574] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:26:37.592] [info] [memory_prefetcher.cpp:65] [memory_prefetcher] stopping: prefetched 0 batches / 0 bytes (stops: headroom=0 reservation=0, skips: lock=0 draining=722)
+[2026-07-31 08:26:37.592] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=133 query=327 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:37.592] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=133 query=327 allocated=58689109248 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:37.592] [info] [sirius_context.cpp:416] [window] end instance=0xe921ed12aa80 connection=1 window=133 query=327 outcome=ok
+[2026-07-31 08:26:37.592] [info] [physical_sirius_execution.cpp:329] Transparent GPU execution: query completed
+[2026-07-31 08:26:37.608] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=328 SQL: CALL unpin_table('supplier')
+[2026-07-31 08:26:37.609] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=329 SQL: CALL unpin_table('lineitem')
+[2026-07-31 08:26:37.610] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=330 SQL: CALL unpin_table('orders')
+[2026-07-31 08:26:37.611] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=331 SQL: CALL unpin_table('nation')
+[2026-07-31 08:26:37.611] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=332 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/customer/*.parquet', tier='gpu', name='customer', cols=['c_custkey','c_phone','c_acctbal'])
+[2026-07-31 08:26:37.612] [info] [sirius_context.cpp:416] [window] begin instance=0xe921ed12aa80 connection=1 window=134 query=332 outcome=-
+[2026-07-31 08:26:37.612] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=134 query=332 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:37.612] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=134 query=332 allocated=0 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:37.612] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:26:37.612] [warning] [sirius_extension.cpp:1348] [pin_table] 'customer': pin_table_compression is enabled but no plan file was found in '/home/nvidia/felipe/sirius/.claude/worktrees/combo-prefetch-comp/bench_out/plans_gpu_facts'; pinning uncompressed
+[2026-07-31 08:26:37.740] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:26:37.753] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=134 query=332 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:37.753] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=134 query=332 allocated=5306251008 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:37.753] [info] [sirius_context.cpp:416] [window] end instance=0xe921ed12aa80 connection=1 window=134 query=332 outcome=ok
+[2026-07-31 08:26:37.753] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=333 SQL: CALL pin_table('/home/nvidia/tpch_parquet_sf1000/orders/*.parquet', tier='gpu', name='orders', cols=['o_custkey'])
+[2026-07-31 08:26:37.754] [info] [sirius_context.cpp:416] [window] begin instance=0xe921ed12aa80 connection=1 window=135 query=333 outcome=-
+[2026-07-31 08:26:37.754] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=135 query=333 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:37.754] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryBegin instance=0xe921ed12aa80 connection=1 window=135 query=333 allocated=5306251008 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:37.754] [info] [sirius_context.cpp:285] QueryBegin: pin_table
+[2026-07-31 08:26:37.754] [info] [sirius_extension.cpp:1338] [pin_table] 'orders' tier=gpu: compressing with plan for 1 column(s)
+[2026-07-31 08:26:38.125] [info] [sirius_context.cpp:300] QueryEnd
+[2026-07-31 08:26:38.136] [info] [sirius_context.cpp:152] [host_pool] HOST:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=135 query=333 allocated=17515413504 bytes peak=73014444032 bytes free_blocks=2875
+[2026-07-31 08:26:38.136] [info] [sirius_context.cpp:167] [gpu_pool] GPU:0 QueryEnd instance=0xe921ed12aa80 connection=1 window=135 query=333 allocated=11493751552 bytes peak=230542519456 bytes reserved=0 bytes
+[2026-07-31 08:26:38.136] [info] [sirius_context.cpp:416] [window] end instance=0xe921ed12aa80 connection=1 window=135 query=333 outcome=ok
+[2026-07-31 08:26:38.136] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=334 SQL: CALL sirius_set_query_label('q22_iter0')
+[2026-07-31 08:26:38.137] [info] [sirius_context.cpp:225] QueryBegin: instance=0xe921ed12aa80 connection=1 query=335 SQL: SET gpu_execution = true;
