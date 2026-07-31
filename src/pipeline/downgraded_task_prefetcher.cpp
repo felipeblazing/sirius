@@ -129,7 +129,8 @@ std::size_t downgraded_task_prefetcher::sweep(rmm::cuda_stream_view stream)
     return last != 0 && now_ms() - last < static_cast<std::int64_t>(_config.pressure_quiet_ms);
   };
 
-  if (under_pressure()) { return 0; }
+  if (!_config.prefetch_during_pressure && under_pressure()) { return 0; }
+  if (_config.prefetch_during_pressure && available() < min_free_bytes) { return 0; }
   if (_task_queue.empty()) { return 0; }
 
   // Snapshot the input batches of the next max_lookahead_tasks pending tasks
@@ -173,7 +174,8 @@ std::size_t downgraded_task_prefetcher::sweep(rmm::cuda_stream_view stream)
     // back to the eviction path). Later candidates belong to tasks at least as
     // far from dispatch, so stop the whole sweep and retry after tasks free
     // memory.
-    if (under_pressure() || available() < batch_bytes + min_free_bytes) { return converted; }
+    if (!_config.prefetch_during_pressure && under_pressure()) { return converted; }
+    if (available() < batch_bytes + min_free_bytes) { return converted; }
 
     // convertible_data_batch handles try_to_mutable (skip on contention), the
     // GPU reservation, the conversion, and idle-state restore on all paths.

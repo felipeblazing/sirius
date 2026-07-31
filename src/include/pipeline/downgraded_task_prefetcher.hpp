@@ -89,6 +89,12 @@ class downgraded_task_prefetcher {
     /// instantaneous headroom looks fine, but the system is still pressured
     /// and upgrading would hand batches straight back to the eviction path.
     std::size_t pressure_quiet_ms{250};
+    /// EXPERIMENT: keep prefetching while the downgrade executor is actively
+    /// evicting (skips the should_downgrade/quiet-period gate; the per-batch
+    /// headroom floor still applies as the OOM guard). Safe only when eviction
+    /// victims and prefetch targets are order-disjoint (front-of-queue targets
+    /// vs back/last-consumed victims).
+    bool prefetch_during_pressure{false};
   };
 
   downgraded_task_prefetcher(config cfg,

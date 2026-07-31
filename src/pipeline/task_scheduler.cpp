@@ -184,6 +184,9 @@ void task_scheduler::maybe_start_downgraded_task_prefetcher()
   if (const char* lookahead = std::getenv("SIRIUS_TASK_PREFETCH_LOOKAHEAD")) {
     cfg.max_lookahead_tasks = std::max(1UL, std::strtoul(lookahead, nullptr, 10));
   }
+  if (const char* during = std::getenv("SIRIUS_TASK_PREFETCH_DURING_PRESSURE")) {
+    cfg.prefetch_during_pressure = std::string_view{during} == "1";
+  }
   if (const char* quiet = std::getenv("SIRIUS_TASK_PREFETCH_QUIET_MS")) {
     cfg.pressure_quiet_ms = std::strtoul(quiet, nullptr, 10);
   }

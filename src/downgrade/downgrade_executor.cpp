@@ -22,6 +22,8 @@
 #include "log/logging.hpp"
 
 #include <algorithm>
+#include <cstdlib>
+#include <string_view>
 #include <chrono>
 #include <ranges>
 #include <thread>
@@ -224,6 +226,15 @@ void downgrade_executor::processing_loop()
     for (auto const& manager : std::views::reverse(managers)) {
       if (req->satisfied.load() || pool_interrupted) break;
       auto repos = manager->get_repositories();
+      // EXPERIMENT (SIRIUS_EVICT_REPOS_DESC=1): walk repos DESCENDING by
+      // {operator_id, port_id} so the latest-consumed pipelines' outputs spill
+      // first, keeping eviction victims disjoint from the front-of-queue
+      // targets of the downgraded-task prefetcher.
+      static const bool evict_desc = [] {
+        const char* v = std::getenv("SIRIUS_EVICT_REPOS_DESC");
+        return v != nullptr && std::string_view{v} == "1";
+      }();
+      if (evict_desc) { std::reverse(repos.begin(), repos.end()); }
       for (auto* repo : repos) {
         if (req->satisfied.load()) break;
 
