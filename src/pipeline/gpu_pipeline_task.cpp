@@ -792,6 +792,12 @@ void gpu_pipeline_task::execute(rmm::cuda_stream_view stream)
       local_state.get_reservation_size_info()->bytes_to_materialize_input);
   }
 
+  // Quiesce before returning: output_data's read locks die below and finalize_operator may free
+  // cross-task device state (hash-table slots, build batches, sort boundaries) while the sink's
+  // enqueues are still in flight on this stream. Nearly free -- only the sink's work is
+  // outstanding, every operator execute already synchronized.
+  stream.synchronize();
+
   // The input pipelineable_operator_data (with its _read_only_data_batches) was destroyed
   // when compute_task replaced operator_input_output_data, releasing all shared locks.
 }
