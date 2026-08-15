@@ -29,6 +29,12 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   message(STATUS "CMAKE_CUDA_ARCHITECTURES not defined. Setting to 'native'.")
 endif()
 
+# CCCL 3.4.0's warp-specialized Blackwell DeviceScan performs an out-of-bounds
+# __shared__ read under compute-sanitizer memcheck; fall back to the
+# decoupled-lookback path until CCCL ships a fix. Analysis and standalone
+# reproducer: docs/cccl-3.4-warpspeed-devicescan.md.
+add_compile_definitions(CCCL_DISABLE_WARPSPEED_SCAN)
+
 # Optional features
 option(ENABLE_STREAM_CHECK
        "Enable stream check library for debugging default stream usage" OFF)
