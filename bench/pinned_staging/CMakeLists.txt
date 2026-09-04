@@ -17,7 +17,9 @@
 # Standalone microbenchmark: pageable -> pinned ring -> device double buffering
 # versus a fully pinned source. Not part of the extension build; see README.md.
 
-cmake_minimum_required(VERSION 3.30.4)
+# 3.24 is the floor for CMAKE_CUDA_ARCHITECTURES=native; the rest is plain CMake
+# so the benchmark builds on a stock toolchain outside the pixi environment.
+cmake_minimum_required(VERSION 3.24)
 
 if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   set(CMAKE_CUDA_ARCHITECTURES native)

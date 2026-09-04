@@ -52,6 +52,9 @@ NSYS_FLAGS=(
   --force-overwrite=true
 )
 
+# Serialize GPU access with other sessions on the box (see run_sweep.sh).
+GPU_LOCK="${GPU_LOCK:-/tmp/sirius-pinned-bench.gpu.lock}"
+
 OVERHEAD_CSV="$OUT_DIR/overhead.csv"
 if [[ ! -f "$OVERHEAD_CSV" || ( "${SKIP_MAIN:-0}" != "1" && -z "${ONLY:-}" ) ]]; then
   echo "config,label,plain_gbps,profiled_gbps,overhead_pct" >"$OVERHEAD_CSV"
@@ -71,8 +74,9 @@ profile() {
   echo "=== $label: $*" >&2
 
   local plain profiled
-  plain=$("$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" "$@" 2>"$OUT_DIR/$label.plain.log")
-  profiled=$("$NSYS" profile "${NSYS_FLAGS[@]}" -o "$rep" -- \
+  plain=$(flock -w 7200 "$GPU_LOCK" \
+    "$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" "$@" 2>"$OUT_DIR/$label.plain.log")
+  profiled=$(flock -w 7200 "$GPU_LOCK" "$NSYS" profile "${NSYS_FLAGS[@]}" -o "$rep" -- \
     "$BIN" --csv --nvtx --iters "$ITERS" --total-bytes "$TOTAL" "$@" 2>"$OUT_DIR/$label.nsys.log")
 
   local p q
@@ -111,7 +115,7 @@ if [[ "$CPU_SAMPLE" == "1" ]]; then
   label=staged-64M-t32-s2-cpusample
   rep="$OUT_DIR/$label"
   echo "=== $label (CPU sampling)" >&2
-  profiled=$("$NSYS" profile --trace=cuda,nvtx --sample=process-tree \
+  profiled=$(flock -w 7200 "$GPU_LOCK" "$NSYS" profile --trace=cuda,nvtx --sample=process-tree \
     --sampling-period="${SAMPLING_PERIOD:-16000000}" \
     --cpuctxsw=none --backtrace=none --cuda-memory-usage=false \
     --capture-range=cudaProfilerApi --capture-range-end=stop --stats=false \
@@ -120,7 +124,7 @@ if [[ "$CPU_SAMPLE" == "1" ]]; then
     --mode staged --chunk-bytes 64M --threads 32 --slots 2 2>"$OUT_DIR/$label.nsys.log")
   plain=$(grep '"--mode staged --chunk-bytes 64M --threads 32 --slots 2"' "$OVERHEAD_CSV" | head -1 | awk -F, '{print $3}')
   if [[ -z "$plain" ]]; then
-    plain=$(gbps "$("$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" \
+    plain=$(gbps "$(flock -w 7200 "$GPU_LOCK" "$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" \
       --mode staged --chunk-bytes 64M --threads 32 --slots 2 2>"$OUT_DIR/$label.plain.log")")
   fi
   awk -v l="$label" -v p="$plain" -v q="$(gbps "$profiled")" 'BEGIN {

@@ -12,8 +12,9 @@ per thread count, with the three strategies as lines:
 
 No third-party dependencies: the chart is written as an SVG by hand.
 
-    plot_results.py results/*.csv --threads 1,8,32 -o out.svg
-    plot_results.py results/*.csv --threads 1,8,32 --table   # markdown table
+    plot_results.py results/*.csv -o out.svg                  # all thread counts, 4 per row
+    plot_results.py results/*.csv --threads 1,8,32 -o out.svg # a subset, one row
+    plot_results.py results/*.csv --table                     # markdown tables
 
 Rows flagged --huge / --pin-cpus are skipped (older CSVs without those columns
 fall back to first-occurrence-wins, which is the plain run in run_sweep.sh).
@@ -93,17 +94,20 @@ def fmt_gbps(v):
     return f"{v:.0f}" if v >= 100 else f"{v:.1f}"
 
 
-def render(data, threads, chunks, theme_name, title, subtitle):
+def render(data, threads, chunks, theme_name, title, subtitle, cols=4):
     t = THEMES[theme_name]
     n = len(threads)
-    width = 1180
-    height = 430
-    left, right, top, bottom = 76, 20, 96, 56
-    gap = 36
+    cols = max(1, min(cols, n))
+    rows = math.ceil(n / cols)
+    left, right, top, bottom = 76, 20, 106, 56
+    gap = 36  # horizontal gap between panels
     label_room = 44  # inside each panel, right of the last point, for end labels
-    panel_w = (width - left - right - gap * (n - 1)) / n
+    panel_w = 340.0  # fixed panel size; the canvas grows with the panel grid
     plot_w = panel_w - label_room
-    plot_h = height - top - bottom
+    plot_h = 260.0
+    row_stride = plot_h + bottom + 40  # x-axis band plus room for the next title
+    width = int(left + cols * panel_w + (cols - 1) * gap + right)
+    height = int(top + (rows - 1) * row_stride + plot_h + bottom + 8)
 
     values = [v for k, v in data.items() if k[1] in chunks and k[2] in threads]
     ymax = max(values) if values else 400.0
@@ -116,8 +120,8 @@ def render(data, threads, chunks, theme_name, title, subtitle):
     def xpos(px0, chunk):
         return px0 + (math.log2(chunk) - x0) / (x1 - x0) * plot_w
 
-    def ypos(v):
-        return top + plot_h - v / ymax * plot_h
+    def ypos(v, py0):
+        return py0 + plot_h - v / ymax * plot_h
 
     out = []
     out.append(
@@ -154,21 +158,23 @@ def render(data, threads, chunks, theme_name, title, subtitle):
         lx_cursor += 30 + 6.3 * len(label) + 28
 
     for i, th in enumerate(threads):
-        px0 = left + i * (panel_w + gap)
+        row, col = divmod(i, cols)
+        px0 = left + col * (panel_w + gap)
+        py0 = top + row * row_stride
         # Panel title
         out.append(
-            f'<text x="{px0}" y="{top - 10}" font-size="13" font-weight="600" '
+            f'<text x="{px0}" y="{py0 - 10}" font-size="13" font-weight="600" '
             f'fill="{t["ink"]}">{th} thread{"s" if th != 1 else ""}</text>'
         )
-        # Gridlines + y ticks (labels on the first panel only; shared axis).
+        # Gridlines + y ticks (labels on the first panel of each row; shared axis).
         v = 0
         while v <= ymax + 1e-9:
-            y = ypos(v)
+            y = ypos(v, py0)
             out.append(
                 f'<line x1="{px0}" y1="{y:.1f}" x2="{px0 + plot_w:.1f}" y2="{y:.1f}" '
                 f'stroke="{t["grid"]}" stroke-width="1"/>'
             )
-            if i == 0:
+            if col == 0:
                 # Unit rides the top tick so it cannot collide with the panel title.
                 label = f"{v:,} GB/s" if v + ystep > ymax else f"{v:,}"
                 out.append(
@@ -178,18 +184,19 @@ def render(data, threads, chunks, theme_name, title, subtitle):
             v += ystep
         # Baseline
         out.append(
-            f'<line x1="{px0}" y1="{ypos(0):.1f}" x2="{px0 + plot_w:.1f}" y2="{ypos(0):.1f}" '
+            f'<line x1="{px0}" y1="{ypos(0, py0):.1f}" x2="{px0 + plot_w:.1f}" '
+            f'y2="{ypos(0, py0):.1f}" '
             f'stroke="{t["axis"]}" stroke-width="1"/>'
         )
         # x ticks
         for c in chunks:
             x = xpos(px0, c)
             out.append(
-                f'<text x="{x:.1f}" y="{top + plot_h + 18}" font-size="11" text-anchor="middle" '
+                f'<text x="{x:.1f}" y="{py0 + plot_h + 18}" font-size="11" text-anchor="middle" '
                 f'fill="{t["muted"]}" font-variant-numeric="tabular-nums">{c}</text>'
             )
         out.append(
-            f'<text x="{px0 + plot_w / 2:.1f}" y="{top + plot_h + 38}" font-size="11" '
+            f'<text x="{px0 + plot_w / 2:.1f}" y="{py0 + plot_h + 38}" font-size="11" '
             f'text-anchor="middle" fill="{t["ink2"]}">Buffer size (MiB)</text>'
         )
         # Lines, markers, end labels
@@ -197,7 +204,12 @@ def render(data, threads, chunks, theme_name, title, subtitle):
         for mode in SERIES:
             c = t["series"][mode]
             pts = [
-                (xpos(px0, ch), ypos(data[(mode, ch, th)]), ch, data[(mode, ch, th)])
+                (
+                    xpos(px0, ch),
+                    ypos(data[(mode, ch, th)], py0),
+                    ch,
+                    data[(mode, ch, th)],
+                )
                 for ch in chunks
                 if (mode, ch, th) in data
             ]
@@ -223,7 +235,7 @@ def render(data, threads, chunks, theme_name, title, subtitle):
             if ends[j][1] - ends[j - 1][1] < min_gap:
                 ends[j][1] = ends[j - 1][1] + min_gap
         for x, ly, val, mode in ends:
-            true_y = ypos(val)
+            true_y = ypos(val, py0)
             if abs(ly - true_y) > 1.0:
                 out.append(
                     f'<line x1="{x + 6:.1f}" y1="{true_y:.1f}" x2="{x + 12:.1f}" y2="{ly:.1f}" '
@@ -268,9 +280,10 @@ def main():
     )
     ap.add_argument(
         "--threads",
-        default="1,8,32",
+        default="1,2,4,8,16,32,64",
         help="comma-separated thread counts, one panel each",
     )
+    ap.add_argument("--cols", type=int, default=4, help="panels per row (default 4)")
     ap.add_argument(
         "--chunks",
         default="1,2,4,8,16,32,64",
@@ -307,7 +320,9 @@ def main():
     if args.table:
         print(table(data, threads, chunks))
         return
-    svg = render(data, threads, chunks, args.theme, args.title, args.subtitle)
+    svg = render(
+        data, threads, chunks, args.theme, args.title, args.subtitle, cols=args.cols
+    )
     if args.output:
         with open(args.output, "w") as fh:
             fh.write(svg)

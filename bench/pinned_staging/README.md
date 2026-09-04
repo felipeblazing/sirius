@@ -90,6 +90,11 @@ Full sweep (writes a CSV and prints it as a table; `TOTAL=8G` for a quick run):
 pixi run bench/pinned_staging/run_sweep.sh
 ```
 
+The sweep, grid and profile scripts serialize their GPU runs through
+`flock` on `/tmp/sirius-pinned-bench.gpu.lock` (override with `GPU_LOCK`), so
+several sessions can share the box without corrupting each other's numbers.
+Wrap ad-hoc runs the same way when someone else may be measuring.
+
 Options: `--mode`, `--pinned-alloc`, `--total-bytes`, `--chunk-bytes`,
 `--threads`, `--slots` (1 disables overlap, a useful control), `--sched ring|pool`,
 `--streams K` (pool scheduling), `--iters`,
@@ -134,21 +139,22 @@ answer.
   <img alt="Host-to-device throughput vs buffer size, one panel per thread count, one line per strategy" src="results/gb300-32G-throughput-vs-buffer.svg">
 </picture>
 
-One panel per thread count, buffer sizes doubling from 1 to 64 MiB. Buffered is
-the ring design with 2 preallocated pinned slots per thread. The grid behind the
-chart is `run_grid.sh` (all cells, 32 GiB per pass); the chart and the tables
-below come from `plot_results.py`, which merges the result CSVs and writes SVG:
+One panel per thread count (1 to 64, doubling), buffer sizes doubling from 1 to
+64 MiB on each x-axis. Buffered is the ring design with 2 preallocated pinned
+slots per thread. The grid behind the chart is complete and is reproduced by
+`run_grid.sh` (all cells, 32 GiB per pass); the chart and the tables below come
+from `plot_results.py`, which merges the result CSVs and writes SVG:
 
 ```bash
 pixi run bench/pinned_staging/run_grid.sh
 ```
 
 ```bash
-python3 bench/pinned_staging/plot_results.py bench/pinned_staging/results/gb300-32G-sweep-2026-09-04.csv bench/pinned_staging/results/gb300-32G-grid-fill-2026-09-04.csv --threads 1,8,32 -o chart.svg
+python3 bench/pinned_staging/plot_results.py bench/pinned_staging/results/gb300-32G-sweep-2026-09-04.csv bench/pinned_staging/results/gb300-32G-grid-fill-2026-09-04.csv bench/pinned_staging/results/gb300-32G-grid-fill64-2026-09-04.csv -o chart.svg
 ```
 
-Add `--table` for the markdown tables, `--theme dark` for the dark variant, and
-`--threads 2,4,16` for other panels (the CSVs hold 1 to 32 threads).
+Add `--table` for the markdown tables, `--theme dark` for the dark variant,
+`--threads 1,8,32` for a subset of panels and `--cols` for the panels per row.
 
 **1 thread** (GB/s)
 
@@ -162,6 +168,30 @@ Add `--table` for the markdown tables, `--theme dark` for the dark variant, and
 | 32 | 366 | 339 | 13.7 |
 | 64 | 359 | 338 | 13.7 |
 
+**2 threads** (GB/s)
+
+| Buffer (MiB) | Pinned source | Pageable source | Buffered |
+| --- | --- | --- | --- |
+| 1 | 171 | 134 | 26.9 |
+| 2 | 240 | 219 | 27.1 |
+| 4 | 292 | 279 | 27.3 |
+| 8 | 328 | 323 | 27.2 |
+| 16 | 338 | 334 | 26.2 |
+| 32 | 362 | 363 | 26.1 |
+| 64 | 357 | 349 | 26.1 |
+
+**4 threads** (GB/s)
+
+| Buffer (MiB) | Pinned source | Pageable source | Buffered |
+| --- | --- | --- | --- |
+| 1 | 170 | 150 | 49.2 |
+| 2 | 237 | 220 | 48.8 |
+| 4 | 288 | 280 | 49.7 |
+| 8 | 323 | 322 | 49.2 |
+| 16 | 337 | 333 | 47.1 |
+| 32 | 362 | 362 | 47.9 |
+| 64 | 357 | 349 | 47.0 |
+
 **8 threads** (GB/s)
 
 | Buffer (MiB) | Pinned source | Pageable source | Buffered |
@@ -174,6 +204,18 @@ Add `--table` for the markdown tables, `--theme dark` for the dark variant, and
 | 32 | 362 | 362 | 74.8 |
 | 64 | 357 | 347 | 77.9 |
 
+**16 threads** (GB/s)
+
+| Buffer (MiB) | Pinned source | Pageable source | Buffered |
+| --- | --- | --- | --- |
+| 1 | 171 | 159 | 96.9 |
+| 2 | 239 | 229 | 96.9 |
+| 4 | 288 | 288 | 93.3 |
+| 8 | 327 | 328 | 95.0 |
+| 16 | 339 | 334 | 92.9 |
+| 32 | 363 | 363 | 96.8 |
+| 64 | 357 | 347 | 94.6 |
+
 **32 threads** (GB/s)
 
 | Buffer (MiB) | Pinned source | Pageable source | Buffered |
@@ -185,6 +227,18 @@ Add `--table` for the markdown tables, `--theme dark` for the dark variant, and
 | 16 | 349 | 331 | 101 |
 | 32 | 362 | 361 | 104 |
 | 64 | 368 | 347 | 98.3 |
+
+**64 threads** (GB/s)
+
+| Buffer (MiB) | Pinned source | Pageable source | Buffered |
+| --- | --- | --- | --- |
+| 1 | 175 | 168 | 108 |
+| 2 | 237 | 228 | 106 |
+| 4 | 289 | 284 | 105 |
+| 8 | 324 | 322 | 103 |
+| 16 | 348 | 346 | 97.0 |
+| 32 | 360 | 359 | 98.6 |
+| 64 | 367 | 366 | 92.4 |
 
 What the curves say:
 
@@ -201,6 +255,13 @@ What the curves say:
   75-78 GB/s with 8 threads, 98-109 GB/s with 32. It is the only strategy for
   which 1 MiB buffers cost nothing, and it still delivers less than a third of
   the direct copies.
+- **More threads stop helping at 32.** Buffered peaks at 32 threads (98-109
+  GB/s) and is slightly lower at 64 (92-108 GB/s) on 72 cores, while pinned and
+  pageable are unchanged from 8 threads up. The one place the DMA side becomes
+  co-limiting is 64 threads with 1 MiB buffers, where workers spend 48% of their
+  time waiting for a slot's copy to finish instead of 0-3% everywhere else; the
+  throughput is the same 108 GB/s because the engine's per-copy efficiency at
+  1 MiB is what they are waiting on.
 
 ### Startup cost of pinning (`--mode alloc`)
 
@@ -393,7 +454,8 @@ profiles as qualitative. The negative numbers are run-to-run variance.
 - **Platform.** The numbers above are from a Grace Blackwell (GB300) box where
   host and device are connected by NVLink-C2C with ATS enabled. Host-to-device
   bandwidth, single-core memcpy bandwidth and the driver's pageable-copy path
-  all differ on x86 + PCIe machines. Re-run the sweep there before generalizing.
+  all differ on x86 + PCIe machines. Re-run the sweep there before generalizing;
+  [HANDOFF-pcie.md](HANDOFF-pcie.md) is a self-contained brief for doing that.
 - **CPU cost.** Stage A burns CPU cores on memcpy. In production those cores
   compete with decode and DuckDB's own CPU work, so the thread count that wins
   here is an upper bound on what Sirius can afford.

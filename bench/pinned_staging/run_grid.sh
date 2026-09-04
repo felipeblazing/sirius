@@ -34,9 +34,17 @@ fi
 mkdir -p "$(dirname "$OUT")"
 echo "writing $OUT" >&2
 
+# Serialize GPU access with other sessions on the box: these numbers are host-
+# memory-bandwidth-bound, so two concurrent runs corrupt each other.
+GPU_LOCK="${GPU_LOCK:-/tmp/sirius-pinned-bench.gpu.lock}"
+# RUN_PREFIX, e.g. "numactl --cpunodebind=0 --membind=0", is put in front of
+# every benchmark invocation (word-split on purpose).
+RUN_PREFIX="${RUN_PREFIX:-}"
 run() {
   echo "--- $*" >&2
-  "$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" "$@" >>"$OUT"
+  # shellcheck disable=SC2086
+  flock -w 7200 "$GPU_LOCK" $RUN_PREFIX "$BIN" --csv --iters "$ITERS" --total-bytes "$TOTAL" \
+    "$@" >>"$OUT"
 }
 
 "$BIN" --csv-header --mode alloc --total-bytes 1M >"$OUT"
