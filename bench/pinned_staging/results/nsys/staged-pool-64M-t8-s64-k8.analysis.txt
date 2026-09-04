@@ -1,0 +1,19 @@
+report: /localhome/local-faramburu/repos/sirius/.claude/worktrees/sirius-pinned-memory-buffering-785a25/build/bench/pinned_staging/nsys/staged-pool-64M-t8-s64-k8.sqlite
+host->device memcpys: 1536  passes: 3
+source kind as seen by CUPTI: pinned=1536
+
+pass   wall_ms     GiB  agg_GB/s dma_busy peak_conc     n copy_GB/s med     p10     p90
+   0    432.49   32.00      79.4    29.7%         1   512         268.1   261.0   274.1
+   1    430.31   32.00      79.8    29.8%         1   512         267.8   260.7   273.9
+   2    454.15   32.00      75.7    27.8%         1   512         271.8   264.0   277.8
+
+worker stages over 3 pass(es), 8 worker thread(s) per pass:
+  memcpy:    10425.1 ms total   99.0% of aggregate worker time
+    wait:        4.1 ms total    0.0% of aggregate worker time
+   issue:       24.2 ms total    0.2% of aggregate worker time
+
+CUDA runtime API inside passes (count, total ms, mean us):
+  cudaMemcpyAsync_v3020                       1536       15.6       10.1
+  cudaEventQuery_v3020                       10925       10.1        0.9
+  cudaEventRecord_v3020                       1536        2.5        1.6
+  cudaStreamSynchronize_v3020                   24        0.1        4.0

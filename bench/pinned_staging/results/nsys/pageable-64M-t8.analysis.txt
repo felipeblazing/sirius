@@ -1,0 +1,15 @@
+report: build/bench/pinned_staging/nsys/pageable-64M-t8.sqlite
+host->device memcpys: 1536  passes: 3
+source kind as seen by CUPTI: pageable=1536
+
+pass   wall_ms     GiB  agg_GB/s dma_busy peak_conc     n copy_GB/s med     p10     p90
+   0     93.95   32.00     365.7    98.7%         1   512         371.1   365.5   375.5
+   1     94.06   32.00     365.3    98.7%         1   512         371.1   365.1   375.9
+   2     94.01   32.00     365.5    98.8%         1   512         370.9   364.9   375.7
+
+worker stages over 3 pass(es), 8 worker thread(s) per pass:
+   issue:     2231.3 ms total   98.9% of aggregate worker time
+
+CUDA runtime API inside passes (count, total ms, mean us):
+  cudaMemcpyAsync_v3020                       1536     2227.2     1450.0
+  cudaStreamSynchronize_v3020                   24        0.1        3.6

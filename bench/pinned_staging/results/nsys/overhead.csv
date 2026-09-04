@@ -1,0 +1,12 @@
+config,label,plain_gbps,profiled_gbps,overhead_pct
+"--mode pinned --chunk-bytes 64M --threads 8",pinned-64M-t8,370.64,366.17,1.21
+"--mode pageable --chunk-bytes 64M --threads 8",pageable-64M-t8,369.36,365.50,1.05
+"--mode pinned --chunk-bytes 1M --threads 8",pinned-1M-t8,176.15,137.67,21.85
+"--mode pageable --chunk-bytes 1M --threads 8",pageable-1M-t8,161.18,129.09,19.91
+"--mode staged --chunk-bytes 64M --threads 8 --slots 2",staged-64M-t8-s2,74.94,82.03,-9.46
+"--mode staged --chunk-bytes 64M --threads 32 --slots 2",staged-64M-t32-s2,102.39,101.07,1.29
+"--mode staged --chunk-bytes 64M --threads 32 --slots 1",staged-64M-t32-s1,103.02,103.46,-0.43
+"--mode staged --chunk-bytes 64M --threads 32 --slots 2 (cpu sampling)",staged-64M-t32-s2-cpusample,102.39,100.28,2.06
+"--mode staged --chunk-bytes 64M --threads 8 --sched pool --slots 64 --streams 8",staged-pool-64M-t8-s64-k8,79.59,79.45,0.18
+"--mode staged --chunk-bytes 64M --threads 32 --sched pool --slots 128 --streams 32",staged-pool-64M-t32-s128-k32,103.09,100.45,2.56
+"--mode staged --chunk-bytes 64M --threads 32 --slots 2 (cpu sampling)",staged-64M-t32-s2-cpusample,102.39,100.49,1.86

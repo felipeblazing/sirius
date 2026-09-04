@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="430" viewBox="0 0 1180 430" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-label="Host-to-device throughput vs buffer size">
+<rect width="1180" height="430" fill="#fcfcfb"/>
+<text x="76" y="28" font-size="15" font-weight="600" fill="#0b0b0b">Host-to-device throughput vs buffer size</text>
+<text x="76" y="46" font-size="12" fill="#52514e">GB300, 32 GiB per pass, median of 3 passes, decimal GB/s; buffered uses 2 preallocated pinned slots per thread</text>
+<line x1="76" y1="68" x2="98" y2="68" stroke="#2a78d6" stroke-width="2" stroke-linecap="round"/>
+<circle cx="87" cy="68" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"/>
+<text x="106" y="72" font-size="12" fill="#0b0b0b">Pinned source</text>
+<line x1="215.89999999999998" y1="68" x2="237.89999999999998" y2="68" stroke="#eb6834" stroke-width="2" stroke-linecap="round"/>
+<circle cx="226.89999999999998" cy="68" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"/>
+<text x="245.89999999999998" y="72" font-size="12" fill="#0b0b0b">Pageable source, direct copy</text>
+<line x1="450.29999999999995" y1="68" x2="472.29999999999995" y2="68" stroke="#1baf7a" stroke-width="2" stroke-linecap="round"/>
+<circle cx="461.29999999999995" cy="68" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"/>
+<text x="480.29999999999995" y="72" font-size="12" fill="#0b0b0b">Buffered: pageable → pinned ring → device</text>
+<text x="76.0" y="86" font-size="13" font-weight="600" fill="#0b0b0b">1 thread</text>
+<line x1="76.0" y1="374.0" x2="369.3" y2="374.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="68.0" y="378.0" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">0</text>
+<line x1="76.0" y1="304.5" x2="369.3" y2="304.5" stroke="#e1e0d9" stroke-width="1"/>
+<text x="68.0" y="308.5" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">100</text>
+<line x1="76.0" y1="235.0" x2="369.3" y2="235.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="68.0" y="239.0" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">200</text>
+<line x1="76.0" y1="165.5" x2="369.3" y2="165.5" stroke="#e1e0d9" stroke-width="1"/>
+<text x="68.0" y="169.5" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">300</text>
+<line x1="76.0" y1="96.0" x2="369.3" y2="96.0" stroke="#e1e0d9" stroke-width="1"/>
+<text x="68.0" y="100.0" font-size="11" text-anchor="end" fill="#898781" font-variant-numeric="tabular-nums">400 GB/s</text>
+<line x1="76.0" y1="374.0" x2="369.3" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
+<text x="76.0" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">1</text>
+<text x="124.9" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">2</text>
+<text x="173.8" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">4</text>
+<text x="222.7" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">8</text>
+<text x="271.6" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">16</text>
+<text x="320.4" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">32</text>
+<text x="369.3" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">64</text>
+<text x="222.7" y="412" font-size="11" text-anchor="middle" fill="#52514e">Buffer size (MiB)</text>
+<polyline points="76.0,253.8 124.9,206.3 173.8,168.3 222.7,141.8 271.6,134.4 320.4,119.5 369.3,124.5" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="253.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 1 MiB, 1 thread(s): 172.9 GB/s</title></circle>
+<circle cx="124.9" cy="206.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 2 MiB, 1 thread(s): 241.3 GB/s</title></circle>
+<circle cx="173.8" cy="168.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 4 MiB, 1 thread(s): 296.0 GB/s</title></circle>
+<circle cx="222.7" cy="141.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 8 MiB, 1 thread(s): 334.1 GB/s</title></circle>
+<circle cx="271.6" cy="134.4" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 16 MiB, 1 thread(s): 344.7 GB/s</title></circle>
+<circle cx="320.4" cy="119.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 32 MiB, 1 thread(s): 366.1 GB/s</title></circle>
+<circle cx="369.3" cy="124.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 64 MiB, 1 thread(s): 359.0 GB/s</title></circle>
+<polyline points="76.0,318.0 124.9,281.9 173.8,237.6 222.7,193.8 271.6,167.8 320.4,138.2 369.3,139.2" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="318.0" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 1 MiB, 1 thread(s): 80.5 GB/s</title></circle>
+<circle cx="124.9" cy="281.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 2 MiB, 1 thread(s): 132.5 GB/s</title></circle>
+<circle cx="173.8" cy="237.6" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 4 MiB, 1 thread(s): 196.3 GB/s</title></circle>
+<circle cx="222.7" cy="193.8" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 8 MiB, 1 thread(s): 259.3 GB/s</title></circle>
+<circle cx="271.6" cy="167.8" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 16 MiB, 1 thread(s): 296.7 GB/s</title></circle>
+<circle cx="320.4" cy="138.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 32 MiB, 1 thread(s): 339.3 GB/s</title></circle>
+<circle cx="369.3" cy="139.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 64 MiB, 1 thread(s): 337.8 GB/s</title></circle>
+<polyline points="76.0,364.2 124.9,364.2 173.8,364.1 222.7,364.1 271.6,364.3 320.4,364.5 369.3,364.5" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="76.0" cy="364.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 1 MiB, 1 thread(s): 14.1 GB/s</title></circle>
+<circle cx="124.9" cy="364.2" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 2 MiB, 1 thread(s): 14.1 GB/s</title></circle>
+<circle cx="173.8" cy="364.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 4 MiB, 1 thread(s): 14.2 GB/s</title></circle>
+<circle cx="222.7" cy="364.1" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 8 MiB, 1 thread(s): 14.3 GB/s</title></circle>
+<circle cx="271.6" cy="364.3" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 16 MiB, 1 thread(s): 14.0 GB/s</title></circle>
+<circle cx="320.4" cy="364.5" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 32 MiB, 1 thread(s): 13.7 GB/s</title></circle>
+<circle cx="369.3" cy="364.5" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 64 MiB, 1 thread(s): 13.7 GB/s</title></circle>
+<text x="383.3" y="128.5" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">359</text>
+<text x="383.3" y="143.2" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">338</text>
+<text x="383.3" y="368.5" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">13.7</text>
+<text x="449.3333333333333" y="86" font-size="13" font-weight="600" fill="#0b0b0b">8 threads</text>
+<line x1="449.3333333333333" y1="374.0" x2="742.7" y2="374.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="449.3333333333333" y1="304.5" x2="742.7" y2="304.5" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="449.3333333333333" y1="235.0" x2="742.7" y2="235.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="449.3333333333333" y1="165.5" x2="742.7" y2="165.5" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="449.3333333333333" y1="96.0" x2="742.7" y2="96.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="449.3333333333333" y1="374.0" x2="742.7" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
+<text x="449.3" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">1</text>
+<text x="498.2" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">2</text>
+<text x="547.1" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">4</text>
+<text x="596.0" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">8</text>
+<text x="644.9" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">16</text>
+<text x="693.8" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">32</text>
+<text x="742.7" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">64</text>
+<text x="596.0" y="412" font-size="11" text-anchor="middle" fill="#52514e">Buffer size (MiB)</text>
+<polyline points="449.3,256.0 498.2,208.5 547.1,172.9 596.0,146.6 644.9,138.3 693.8,122.2 742.7,125.9" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="449.3" cy="256.0" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 1 MiB, 8 thread(s): 169.8 GB/s</title></circle>
+<circle cx="498.2" cy="208.5" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 2 MiB, 8 thread(s): 238.1 GB/s</title></circle>
+<circle cx="547.1" cy="172.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 4 MiB, 8 thread(s): 289.3 GB/s</title></circle>
+<circle cx="596.0" cy="146.6" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 8 MiB, 8 thread(s): 327.1 GB/s</title></circle>
+<circle cx="644.9" cy="138.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 16 MiB, 8 thread(s): 339.2 GB/s</title></circle>
+<circle cx="693.8" cy="122.2" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 32 MiB, 8 thread(s): 362.2 GB/s</title></circle>
+<circle cx="742.7" cy="125.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 64 MiB, 8 thread(s): 357.0 GB/s</title></circle>
+<polyline points="449.3,266.4 498.2,219.0 547.1,179.1 596.0,147.5 644.9,142.2 693.8,122.2 742.7,132.7" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="449.3" cy="266.4" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 1 MiB, 8 thread(s): 154.8 GB/s</title></circle>
+<circle cx="498.2" cy="219.0" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 2 MiB, 8 thread(s): 223.0 GB/s</title></circle>
+<circle cx="547.1" cy="179.1" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 4 MiB, 8 thread(s): 280.5 GB/s</title></circle>
+<circle cx="596.0" cy="147.5" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 8 MiB, 8 thread(s): 325.9 GB/s</title></circle>
+<circle cx="644.9" cy="142.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 16 MiB, 8 thread(s): 333.5 GB/s</title></circle>
+<circle cx="693.8" cy="122.2" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 32 MiB, 8 thread(s): 362.3 GB/s</title></circle>
+<circle cx="742.7" cy="132.7" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 64 MiB, 8 thread(s): 347.2 GB/s</title></circle>
+<polyline points="449.3,322.0 498.2,320.4 547.1,321.5 596.0,319.6 644.9,320.3 693.8,322.0 742.7,319.9" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="449.3" cy="322.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 1 MiB, 8 thread(s): 74.9 GB/s</title></circle>
+<circle cx="498.2" cy="320.4" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 2 MiB, 8 thread(s): 77.1 GB/s</title></circle>
+<circle cx="547.1" cy="321.5" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 4 MiB, 8 thread(s): 75.5 GB/s</title></circle>
+<circle cx="596.0" cy="319.6" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 8 MiB, 8 thread(s): 78.3 GB/s</title></circle>
+<circle cx="644.9" cy="320.3" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 16 MiB, 8 thread(s): 77.2 GB/s</title></circle>
+<circle cx="693.8" cy="322.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 32 MiB, 8 thread(s): 74.8 GB/s</title></circle>
+<circle cx="742.7" cy="319.9" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 64 MiB, 8 thread(s): 77.9 GB/s</title></circle>
+<text x="756.7" y="129.9" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">357</text>
+<line x1="748.7" y1="132.7" x2="754.7" y2="138.9" stroke="#c3c2b7" stroke-width="1"/>
+<text x="756.7" y="142.9" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">347</text>
+<text x="756.7" y="323.9" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">77.9</text>
+<text x="822.6666666666666" y="86" font-size="13" font-weight="600" fill="#0b0b0b">32 threads</text>
+<line x1="822.6666666666666" y1="374.0" x2="1116.0" y2="374.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="822.6666666666666" y1="304.5" x2="1116.0" y2="304.5" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="822.6666666666666" y1="235.0" x2="1116.0" y2="235.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="822.6666666666666" y1="165.5" x2="1116.0" y2="165.5" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="822.6666666666666" y1="96.0" x2="1116.0" y2="96.0" stroke="#e1e0d9" stroke-width="1"/>
+<line x1="822.6666666666666" y1="374.0" x2="1116.0" y2="374.0" stroke="#c3c2b7" stroke-width="1"/>
+<text x="822.7" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">1</text>
+<text x="871.6" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">2</text>
+<text x="920.4" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">4</text>
+<text x="969.3" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">8</text>
+<text x="1018.2" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">16</text>
+<text x="1067.1" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">32</text>
+<text x="1116.0" y="392" font-size="11" text-anchor="middle" fill="#898781" font-variant-numeric="tabular-nums">64</text>
+<text x="969.3" y="412" font-size="11" text-anchor="middle" fill="#52514e">Buffer size (MiB)</text>
+<polyline points="822.7,252.9 871.6,208.3 920.4,173.1 969.3,147.3 1018.2,131.8 1067.1,122.7 1116.0,118.1" fill="none" stroke="#2a78d6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="822.7" cy="252.9" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 1 MiB, 32 thread(s): 174.2 GB/s</title></circle>
+<circle cx="871.6" cy="208.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 2 MiB, 32 thread(s): 238.5 GB/s</title></circle>
+<circle cx="920.4" cy="173.1" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 4 MiB, 32 thread(s): 289.0 GB/s</title></circle>
+<circle cx="969.3" cy="147.3" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 8 MiB, 32 thread(s): 326.1 GB/s</title></circle>
+<circle cx="1018.2" cy="131.8" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 16 MiB, 32 thread(s): 348.6 GB/s</title></circle>
+<circle cx="1067.1" cy="122.7" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 32 MiB, 32 thread(s): 361.6 GB/s</title></circle>
+<circle cx="1116.0" cy="118.1" r="4" fill="#2a78d6" stroke="#fcfcfb" stroke-width="2"><title>Pinned source, 64 MiB, 32 thread(s): 368.2 GB/s</title></circle>
+<polyline points="822.7,262.3 871.6,216.8 920.4,177.1 969.3,148.9 1018.2,143.9 1067.1,123.1 1116.0,133.0" fill="none" stroke="#eb6834" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="822.7" cy="262.3" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 1 MiB, 32 thread(s): 160.8 GB/s</title></circle>
+<circle cx="871.6" cy="216.8" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 2 MiB, 32 thread(s): 226.2 GB/s</title></circle>
+<circle cx="920.4" cy="177.1" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 4 MiB, 32 thread(s): 283.4 GB/s</title></circle>
+<circle cx="969.3" cy="148.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 8 MiB, 32 thread(s): 323.9 GB/s</title></circle>
+<circle cx="1018.2" cy="143.9" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 16 MiB, 32 thread(s): 331.0 GB/s</title></circle>
+<circle cx="1067.1" cy="123.1" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 32 MiB, 32 thread(s): 361.0 GB/s</title></circle>
+<circle cx="1116.0" cy="133.0" r="4" fill="#eb6834" stroke="#fcfcfb" stroke-width="2"><title>Pageable source, direct copy, 64 MiB, 32 thread(s): 346.8 GB/s</title></circle>
+<polyline points="822.7,299.4 871.6,298.0 920.4,298.3 969.3,299.3 1018.2,303.8 1067.1,301.9 1116.0,305.7" fill="none" stroke="#1baf7a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="822.7" cy="299.4" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 1 MiB, 32 thread(s): 107.4 GB/s</title></circle>
+<circle cx="871.6" cy="298.0" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 2 MiB, 32 thread(s): 109.3 GB/s</title></circle>
+<circle cx="920.4" cy="298.3" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 4 MiB, 32 thread(s): 108.8 GB/s</title></circle>
+<circle cx="969.3" cy="299.3" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 8 MiB, 32 thread(s): 107.5 GB/s</title></circle>
+<circle cx="1018.2" cy="303.8" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 16 MiB, 32 thread(s): 101.0 GB/s</title></circle>
+<circle cx="1067.1" cy="301.9" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 32 MiB, 32 thread(s): 103.8 GB/s</title></circle>
+<circle cx="1116.0" cy="305.7" r="4" fill="#1baf7a" stroke="#fcfcfb" stroke-width="2"><title>Buffered: pageable → pinned ring → device, 64 MiB, 32 thread(s): 98.3 GB/s</title></circle>
+<text x="1130.0" y="122.1" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">368</text>
+<text x="1130.0" y="137.0" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">347</text>
+<text x="1130.0" y="309.7" font-size="11" fill="#52514e" font-variant-numeric="tabular-nums">98.3</text>
+</svg>

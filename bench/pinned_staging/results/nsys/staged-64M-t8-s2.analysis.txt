@@ -1,0 +1,19 @@
+report: build/bench/pinned_staging/nsys/staged-64M-t8-s2.sqlite
+host->device memcpys: 1536  passes: 3
+source kind as seen by CUPTI: pinned=1536
+
+pass   wall_ms     GiB  agg_GB/s dma_busy peak_conc     n copy_GB/s med     p10     p90
+   0    418.67   32.00      82.1    31.0%         1   512         264.9   258.1   269.7
+   1    421.37   32.00      81.5    30.9%         1   512         264.5   257.4   269.8
+   2    418.84   32.00      82.0    31.0%         1   512         264.8   258.2   269.3
+
+worker stages over 3 pass(es), 8 worker thread(s) per pass:
+  memcpy:     9985.1 ms total   99.1% of aggregate worker time
+    wait:        6.2 ms total    0.1% of aggregate worker time
+   issue:       20.4 ms total    0.2% of aggregate worker time
+
+CUDA runtime API inside passes (count, total ms, mean us):
+  cudaMemcpyAsync_v3020                       1536       14.5        9.4
+  cudaStreamSynchronize_v3020                   24        6.8      283.0
+  cudaEventSynchronize_v3020                  1488        5.5        3.7
+  cudaEventRecord_v3020                       1536        3.0        1.9
