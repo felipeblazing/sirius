@@ -424,11 +424,27 @@ TEST_CASE("join-edge route accepts only direct matching membership-supported equ
                                           cudf::data_type{cudf::type_id::UINT32},
                                           kInt32));
     // Identical but membership-unsupported types.
-    for (auto const id :
-         {cudf::type_id::FLOAT64, cudf::type_id::TIMESTAMP_DAYS, cudf::type_id::STRING}) {
+    for (auto const id : {cudf::type_id::FLOAT64, cudf::type_id::TIMESTAMP_DAYS}) {
       REQUIRE_FALSE(direct_route_admissible(
         duckdb::JoinType::INNER, equal, kDirectDirect, cudf::data_type{id}, cudf::data_type{id}));
     }
+  }
+  SECTION("STRING keys ride the join-edge route as fingerprints")
+  {
+    auto const string_type = cudf::data_type{cudf::type_id::STRING};
+    REQUIRE(direct_route_admissible(
+      duckdb::JoinType::INNER, equal, kDirectDirect, string_type, string_type));
+    REQUIRE(direct_route_admissible(
+      duckdb::JoinType::SEMI, equal, kDirectDirect, string_type, string_type));
+    // The probe must be a materialized STRING operator output, never a dictionary carrier, and
+    // a string never pairs with an integer side.
+    REQUIRE_FALSE(direct_route_admissible(duckdb::JoinType::INNER,
+                                          equal,
+                                          kDirectDirect,
+                                          cudf::data_type{cudf::type_id::DICTIONARY32},
+                                          string_type));
+    REQUIRE_FALSE(
+      direct_route_admissible(duckdb::JoinType::INNER, equal, kDirectDirect, kInt64, string_type));
   }
 }
 

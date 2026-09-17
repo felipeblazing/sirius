@@ -123,7 +123,7 @@ bloom_owner<Filter> build_bloom(cudf::column_view const& keys,
     // The build column may sit at a narrower same-family carrier than the rep; the iterator widens
     // per element instead of materializing a widened copy.
     bool const added = detail::with_build_key_iterator<key_type>(
-      keys, [&](auto first, auto last) { result->add_async(first, last, stream); });
+      keys, stream, mr, [&](auto first, auto last) { result->add_async(first, last, stream); });
     if (!added) {
       throw std::logic_error("[sirius_dynamic_bloom_filter] build carrier does not fit its rep.");
     }
@@ -393,7 +393,7 @@ std::unique_ptr<cudf::column> sirius_dynamic_bloom_filter::compute_mask(
     [&](auto const& bloom) {
       using owner_type = std::decay_t<decltype(bloom)>;
       using key_type   = typename owner_type::element_type::key_type;
-      return detail::dispatch_probe_adapter<key_type>(_domain, probe, [&](auto adapter) {
+      return detail::dispatch_probe_adapter<key_type>(_domain, probe, stream, [&](auto adapter) {
         out = cudf::make_numeric_column(
           cudf::data_type{cudf::type_id::BOOL8}, n, cudf::mask_state::UNALLOCATED, stream, mr);
         auto* const outp = out->mutable_view().data<bool>();

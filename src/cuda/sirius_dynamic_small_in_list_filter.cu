@@ -64,8 +64,10 @@ namespace {
 /// @brief Per-row brute-force membership scan: out[idx] == true iff probe[idx] equals any of the m
 /// needles. For the small m this filter gates on (<= k_max_keys), a compare-all linear scan beats a
 /// hash probe and reserves no sentinel value. The adapter converts probe values into the needle
-/// domain per element; one the domain cannot represent is a definite non-member. Rows the prior
-/// keep-mask killed skip the scan.
+/// domain per element; one the domain cannot represent is a definite non-member. String needles
+/// are 64-bit fingerprints compared as such (one code path, no byte compare), so the scan is
+/// exact for integers and no-false-negatives for strings. Rows the prior keep-mask killed skip
+/// the scan.
 template <class Adapter, class KeyT>
 struct small_in_list_scan {
   Adapter adapt;
@@ -161,8 +163,8 @@ sirius_dynamic_small_in_list_filter::sirius_dynamic_small_in_list_filter(
   auto const domain = classify_membership_key(keys.type());
   if (!domain.has_value() || !supports(keys)) {
     throw std::invalid_argument(
-      "[sirius_dynamic_small_in_list_filter] unsupported key column (1..k_max_keys integer keys "
-      "with no nulls required).");
+      "[sirius_dynamic_small_in_list_filter] unsupported key column (1..k_max_keys integer or "
+      "string keys with no nulls required).");
   }
   _domain = *domain;
 
@@ -178,7 +180,7 @@ sirius_dynamic_small_in_list_filter::sirius_dynamic_small_in_list_filter(
   rmm::device_buffer needles{bytes, stream, mr};
   bool const copied = detail::dispatch_key_rep(_domain.rep, [&](auto key_tag) {
     using key_type = decltype(key_tag);
-    return detail::with_build_key_iterator<key_type>(keys, [&](auto first, auto last) {
+    return detail::with_build_key_iterator<key_type>(keys, stream, mr, [&](auto first, auto last) {
       thrust::copy(
         rmm::exec_policy_nosync(stream, mr), first, last, static_cast<key_type*>(needles.data()));
     });
@@ -221,7 +223,7 @@ std::unique_ptr<cudf::column> sirius_dynamic_small_in_list_filter::compute_mask(
   auto const dispatched = detail::dispatch_key_rep(_domain.rep, [&](auto key_tag) {
     using key_type      = decltype(key_tag);
     auto const* needles = static_cast<key_type const*>(replica->needles.data());
-    return detail::dispatch_probe_adapter<key_type>(_domain, probe, [&](auto adapter) {
+    return detail::dispatch_probe_adapter<key_type>(_domain, probe, stream, [&](auto adapter) {
       out = cudf::make_numeric_column(
         cudf::data_type{cudf::type_id::BOOL8}, n, cudf::mask_state::UNALLOCATED, stream, mr);
       auto* const outp = out->mutable_view().data<bool>();

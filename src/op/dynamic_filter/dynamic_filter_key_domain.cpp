@@ -40,7 +40,11 @@ std::optional<membership_key_domain> classify_membership_key(cudf::data_type bui
       return membership_key_domain{rep::u32, family::unsigned_int, build_type};
     case cudf::type_id::UINT64:
       return membership_key_domain{rep::u64, family::unsigned_int, build_type};
-    // Every other type (temporal, decimal, floating-point, string, nested) declines.
+    // Strings have no bitwise-comparable fixed-width form a set could hold; the set stores a
+    // 64-bit XXHash_64 fingerprint per key instead (no false negatives, see the header).
+    case cudf::type_id::STRING:
+      return membership_key_domain{rep::u64, family::string_hash, build_type};
+    // Every other type (temporal, decimal, floating-point, nested) declines.
     default: return std::nullopt;
   }
 }
@@ -71,6 +75,9 @@ bool membership_probe_compatible(membership_key_domain const& domain,
         case cudf::type_id::UINT64: return true;
         default: return false;
       }
+    // The in-kernel hash reads cudf::string_view elements, so the probe must be a materialized
+    // STRING column; a dictionary-encoded carrier declines rather than hashing its codes.
+    case membership_key_family::string_hash: return probe.id() == cudf::type_id::STRING;
   }
   return false;
 }

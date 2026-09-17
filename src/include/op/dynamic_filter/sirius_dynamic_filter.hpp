@@ -172,7 +172,8 @@ class sirius_mask_applicable {
    * The membership implementations accept any integer carrier of the key's signedness
    * (INT8..INT64 for signed keys, UINT8..UINT64 for unsigned), converting per element in-kernel:
    * a pinned chunk may store the key narrower than the type the filter was published with, and no
-   * consumer should have to materialize a widened copy to probe it. `membership_probe_compatible`
+   * consumer should have to materialize a widened copy to probe it. String keys accept a STRING
+   * probe, fingerprinted in-kernel with the hash the build side used. `membership_probe_compatible`
    * is the host-side mirror of what a filter accepts.
    */
   [[nodiscard]] virtual std::unique_ptr<cudf::column> compute_mask(
@@ -201,20 +202,25 @@ class sirius_mask_applicable {
 };
 
 /**
- * @brief Exact hash membership filter
+ * @brief Hash membership filter: exact for integer keys, no false negatives for string keys
  *
- * The backing set reserves one sentinel value it cannot store (`numeric_limits::min()` for signed
- * reps, `::max()` for unsigned); probes equal to it are kept to avoid false negatives.
+ * String keys are stored as 64-bit XXHash_64 fingerprints (see `membership_key_domain`), so two
+ * distinct strings sharing a fingerprint pass a probe the authoritative join then drops. The
+ * backing set reserves one sentinel value it cannot store (`numeric_limits::min()` for signed
+ * reps, `::max()` for unsigned and string fingerprints); probes equal to it are kept to avoid
+ * false negatives.
  */
 class sirius_dynamic_in_list_filter final : public sirius_dynamic_filter,
                                             public sirius_mask_applicable,
                                             public sirius_device_replicable {
  public:
   /**
-   * @brief Builds a persistent set from null-free integer keys (see `membership_key_supported`)
+   * @brief Builds a persistent set from null-free integer or string keys (see
+   * `membership_key_supported`)
    *
    * The set is typed at the key's rep: a build column arriving at a narrowed carrier (INT8/INT16,
-   * UINT8/UINT16) widens per element into a 32-bit set.
+   * UINT8/UINT16) widens per element into a 32-bit set; a STRING build column is hashed once into
+   * a UINT64 fingerprint set.
    *
    * @pre The backing storage for @p keys remains valid until work enqueued on @p stream completes.
    * @throw std::invalid_argument if @p keys is unsupported
@@ -266,9 +272,11 @@ class sirius_dynamic_in_list_filter final : public sirius_dynamic_filter,
 };
 
 /**
- * @brief Exact linear membership over a small, null-free integer set
+ * @brief Linear membership over a small, null-free integer or string set
  *
- * Needles are stored at the key's rep (see `membership_key_domain`).
+ * Needles are stored at the key's rep (see `membership_key_domain`): integer needles compare
+ * exactly; string needles are 64-bit fingerprints compared against the probe's in-kernel
+ * fingerprint, so the filter has no false negatives rather than being exact.
  */
 class sirius_dynamic_small_in_list_filter final : public sirius_dynamic_filter,
                                                   public sirius_mask_applicable,
@@ -339,8 +347,8 @@ class sirius_dynamic_bloom_filter final : public sirius_dynamic_filter,
                                           public sirius_device_replicable {
  public:
   /**
-   * @brief Builds a Bloom filter from integer keys (see `membership_key_supported`), excluding
-   * nulls
+   * @brief Builds a Bloom filter from integer or string keys (see `membership_key_supported`),
+   * excluding nulls
    *
    * @pre Key storage remains valid until work enqueued on @p stream completes.
    * @throw std::invalid_argument if @p keys is unsupported

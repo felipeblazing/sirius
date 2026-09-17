@@ -25,14 +25,24 @@
 // cudf::type_dispatcher is deliberately not used for the (key rep, probe carrier) pair: the
 // allowed pairs are a short explicit list and are the correctness surface, so they are spelled
 // out here, and the instantiation count stays bounded (per filter kind: 2 signed reps x 4 signed
-// carriers + 2 unsigned reps x 4 unsigned carriers = 16 probe kernels).
+// carriers + 2 unsigned reps x 4 unsigned carriers + 1 string fingerprint = 17 probe kernels).
 
 // sirius
 #include <op/dynamic_filter/dynamic_filter_key_domain.hpp>
 
 // cudf
+#include <cudf/column/column.hpp>
+#include <cudf/column/column_device_view.cuh>
 #include <cudf/column/column_view.hpp>
+#include <cudf/hashing.hpp>
+#include <cudf/hashing/detail/xxhash_64.cuh>
+#include <cudf/strings/string_view.cuh>
+#include <cudf/table/table_view.hpp>
 #include <cudf/types.hpp>
+
+// rmm
+#include <rmm/cuda_stream_view.hpp>
+#include <rmm/resource_ref.hpp>
 
 // cccl
 #include <cuda/std/limits>
@@ -41,6 +51,7 @@
 
 // standard library
 #include <cstdint>
+#include <memory>
 #include <utility>
 
 namespace sirius::op::detail {
@@ -142,6 +153,28 @@ struct integral_probe_adapter {
   }
 };
 
+/// Hash used for the string family on both sides: `cudf::hashing::xxhash_64` over the build
+/// column (a one-column table hashes each row as XXHash_64<string_view>{seed}(row)) and this
+/// functor over each probe string. The seed and byte view (the string's UTF-8 bytes, no length
+/// prefix, no terminator) must stay identical or the filter silently drops matches.
+using string_fingerprint_hasher = cudf::hashing::detail::XXHash_64<cudf::string_view>;
+constexpr std::uint64_t string_fingerprint_seed = cudf::DEFAULT_HASH_SEED;
+
+/// STRING probes against a fingerprint set: hashes each probe string in-kernel, so no hashed copy
+/// of the probe column is materialized. A null probe string is a definite non-member (the join
+/// runs with UNEQUAL null semantics); the caller still copies the probe's null mask onto the
+/// result, so this only keeps the kernel from reading an offset pair a null row need not own.
+struct string_hash_adapter {
+  using key_type = std::uint64_t;
+  cudf::column_device_view col;
+  __device__ __forceinline__ bool operator()(cudf::size_type i, std::uint64_t& out) const noexcept
+  {
+    if (col.nullable() && !col.is_valid_nocheck(i)) { return false; }
+    out = string_fingerprint_hasher{string_fingerprint_seed}(col.element<cudf::string_view>(i));
+    return true;
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // Host-side dispatch
 //===----------------------------------------------------------------------===//
@@ -175,9 +208,14 @@ bool dispatch_family_carrier(cudf::data_type t, Fn&& fn)
 /// into KeyT, or returns false (= decline) without invoking it. KeyT must be the rep the domain
 /// was classified to; a rep/family disagreement is unreachable and also declines. Each key family
 /// owns one arm here, mirrored on the host by membership_probe_compatible.
+///
+/// @p stream orders any device-side view the adapter needs (a strings column's device view owns
+/// a small allocation for its offsets child); @p fn must enqueue its kernel on the same stream so
+/// the stream-ordered free of that view lands behind the kernel.
 template <class KeyT, class Fn>
 bool dispatch_probe_adapter(membership_key_domain const& domain,
                             cudf::column_view const& probe,
+                            rmm::cuda_stream_view stream,
                             Fn&& fn)
 {
   auto const integral_arm = [&]() {
@@ -192,6 +230,16 @@ bool dispatch_probe_adapter(membership_key_domain const& domain,
       return false;
     case membership_key_family::unsigned_int:
       if constexpr (cuda::std::is_unsigned_v<KeyT>) { return integral_arm(); }
+      return false;
+    case membership_key_family::string_hash:
+      if constexpr (cuda::std::is_same_v<KeyT, std::uint64_t>) {
+        if (probe.type().id() != cudf::type_id::STRING) { return false; }
+        // The device view is a host object whose child views live in a stream-ordered device
+        // allocation released when it goes out of scope, after fn enqueued its kernel on stream.
+        auto const device_view = cudf::column_device_view::create(probe, stream);
+        fn(string_hash_adapter{*device_view});
+        return true;
+      }
       return false;
   }
   return false;
@@ -228,6 +276,37 @@ bool with_build_key_iterator(cudf::column_view const& keys, Fn&& fn)
     }
   });
   return invoked;
+}
+
+/// Materializes the string family's build fingerprints: one UINT64 per build row, computed by
+/// `cudf::hashing::xxhash_64` with the seed the probe adapter uses. The build side is small (it
+/// is what the filter exists to summarize), so one hashed copy of it is the intended cost. The
+/// column frees stream-ordered on @p stream once it goes out of scope.
+[[nodiscard]] inline std::unique_ptr<cudf::column> materialize_string_fingerprints(
+  cudf::column_view const& keys, rmm::cuda_stream_view stream, rmm::device_async_resource_ref mr)
+{
+  return cudf::hashing::xxhash_64(cudf::table_view{{keys}}, string_fingerprint_seed, stream, mr);
+}
+
+/// Stream-aware overload covering every family: integer carriers take the iterator path above;
+/// a STRING build column against the `u64` rep hashes to fingerprints first, and @p fn must
+/// enqueue its consumer on @p stream so the fingerprints outlive it.
+template <class KeyT, class Fn>
+bool with_build_key_iterator(cudf::column_view const& keys,
+                             rmm::cuda_stream_view stream,
+                             rmm::device_async_resource_ref mr,
+                             Fn&& fn)
+{
+  if (keys.type().id() == cudf::type_id::STRING) {
+    if constexpr (cuda::std::is_same_v<KeyT, std::uint64_t>) {
+      auto const fingerprints = materialize_string_fingerprints(keys, stream, mr);
+      auto const* first       = fingerprints->view().data<std::uint64_t>();
+      fn(first, first + keys.size());
+      return true;
+    }
+    return false;
+  }
+  return with_build_key_iterator<KeyT>(keys, std::forward<Fn>(fn));
 }
 
 }  // namespace sirius::op::detail

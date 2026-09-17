@@ -142,7 +142,7 @@ set_owner<KeyT> build_set(cudf::column_view const& keys,
     // The build column may sit at a narrower same-family carrier than the rep; the iterator widens
     // per element instead of materializing a widened copy.
     bool const inserted = detail::with_build_key_iterator<KeyT>(
-      keys, [&](auto first, auto last) { set->insert_async(first, last, stream); });
+      keys, stream, mr, [&](auto first, auto last) { set->insert_async(first, last, stream); });
     if (!inserted) {
       throw std::logic_error("[sirius_dynamic_in_list_filter] build carrier does not fit its rep.");
     }
@@ -152,7 +152,9 @@ set_owner<KeyT> build_set(cudf::column_view const& keys,
 
 // The adapter converts probe values into the key domain per element; one the domain cannot
 // represent is a definite non-member. Rows the prior keep-mask killed skip the lookup. A key equal
-// to the set's reserved sentinel cannot be stored, so such a probe is kept conservatively.
+// to the set's reserved sentinel cannot be stored (cuco's insert of its empty key is a no-op), so
+// such a probe is kept conservatively; for the string family that is a probe whose fingerprint is
+// UINT64_MAX, which therefore always passes.
 template <class Adapter, class SetRef>
 struct set_contains {
   using key_type = typename Adapter::key_type;
@@ -222,8 +224,8 @@ sirius_dynamic_in_list_filter::sirius_dynamic_in_list_filter(cudf::column_view c
   auto const domain = classify_membership_key(keys.type());
   if (!domain.has_value() || !supports(keys)) {
     throw std::invalid_argument(
-      "[sirius_dynamic_in_list_filter] unsupported key column (integer keys with no nulls "
-      "required).");
+      "[sirius_dynamic_in_list_filter] unsupported key column (integer or string keys with no "
+      "nulls required).");
   }
   _domain = *domain;
 
@@ -412,7 +414,7 @@ std::unique_ptr<cudf::column> sirius_dynamic_in_list_filter::compute_mask(
     [&](auto const& set) {
       using owner_type = std::decay_t<decltype(set)>;
       using key_type   = typename owner_type::element_type::key_type;
-      return detail::dispatch_probe_adapter<key_type>(_domain, probe, [&](auto adapter) {
+      return detail::dispatch_probe_adapter<key_type>(_domain, probe, stream, [&](auto adapter) {
         out = cudf::make_numeric_column(
           cudf::data_type{cudf::type_id::BOOL8}, n, cudf::mask_state::UNALLOCATED, stream, mr);
         auto* const outp = out->mutable_view().data<bool>();

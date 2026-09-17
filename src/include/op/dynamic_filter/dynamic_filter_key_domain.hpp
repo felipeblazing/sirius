@@ -27,6 +27,12 @@
 //   * the key *family*: which probe adapter (see cuda/dynamic_filter_probe.cuh) converts a probe
 //     column at its own carrier into the rep. A family is the correctness surface: it names the
 //     probe carriers whose values are comparable to the stored keys.
+//
+// Integer families store the key values themselves, so their IN-lists are exact. The string
+// family stores a 64-bit XXHash_64 fingerprint of each key (cudf::hashing::xxhash_64 over the
+// build column, the identical hash computed in-kernel over each probe string), so every
+// membership filter over strings is "no false negatives": two distinct strings sharing a
+// fingerprint make the probe pass a row the authoritative join then drops.
 
 // cudf
 #include <cudf/types.hpp>
@@ -44,7 +50,7 @@ enum class membership_key_rep : std::uint8_t { i32, i64, u32, u64 };
 /// Probe-adapter selector. Each value names one device adapter (cuda/dynamic_filter_probe.cuh)
 /// and one arm each of `classify_membership_key` and `membership_probe_compatible`; a new key
 /// family adds a value here and those three arms.
-enum class membership_key_family : std::uint8_t { signed_int, unsigned_int };
+enum class membership_key_family : std::uint8_t { signed_int, unsigned_int, string_hash };
 
 struct membership_key_domain {
   membership_key_rep rep{membership_key_rep::i32};
@@ -60,7 +66,9 @@ struct membership_key_domain {
  *
  * The rep is the narrowest listed rep that holds every value of @p build_type, so a build column
  * arriving at a narrowed carrier (compressed materialization) yields a carrier-sized set and wider
- * probes range-check down into it. Returns nullopt for a type no membership filter supports.
+ * probes range-check down into it. STRING keys classify to the `u64` rep of the `string_hash`
+ * family: the set holds fingerprints, not strings. Returns nullopt for a type no membership
+ * filter supports.
  */
 [[nodiscard]] std::optional<membership_key_domain> classify_membership_key(
   cudf::data_type build_type) noexcept;
@@ -77,7 +85,9 @@ struct membership_key_domain {
  * @brief True when a probe column of type @p probe can be adapted to @p domain
  *
  * Host mirror of the device-side adapter dispatch: a probe type this rejects is one every filter's
- * `compute_mask` declines with a null result. Signed and unsigned carriers never mix.
+ * `compute_mask` declines with a null result. Signed and unsigned carriers never mix; the string
+ * family accepts only a STRING probe (the fused decode materializes dictionary and str_split
+ * carriers back into STRING before probing, so DICTIONARY32 never reaches a probe and declines).
  */
 [[nodiscard]] bool membership_probe_compatible(membership_key_domain const& domain,
                                                cudf::data_type probe) noexcept;
@@ -85,7 +95,7 @@ struct membership_key_domain {
 /// cudf type of the device element a rep is instantiated over (INT32/INT64/UINT32/UINT64).
 [[nodiscard]] cudf::data_type membership_rep_type(membership_key_rep rep) noexcept;
 
-/// Byte width of a rep's device element.
+/// Byte width of a rep's device element (8 for the string family's fingerprints).
 [[nodiscard]] std::size_t membership_rep_bytes(membership_key_rep rep) noexcept;
 
 }  // namespace sirius::op
