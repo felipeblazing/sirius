@@ -112,7 +112,8 @@ void copy_filter_storage(Filter const& source,
 }
 
 template <class Filter>
-bloom_owner<Filter> build_bloom(cudf::column_view const& keys,
+bloom_owner<Filter> build_bloom(membership_key_domain const& domain,
+                                cudf::column_view const& keys,
                                 std::size_t num_blocks,
                                 rmm::device_async_resource_ref mr,
                                 cuda::stream_ref stream)
@@ -120,10 +121,10 @@ bloom_owner<Filter> build_bloom(cudf::column_view const& keys,
   using key_type = typename Filter::key_type;
   auto result    = make_bloom<Filter>(num_blocks, mr, stream);
   if (keys.size() > 0) {
-    // The build column may sit at a narrower same-family carrier than the rep; the iterator widens
-    // per element instead of materializing a widened copy.
+    // The build column may sit at a same-family carrier other than the rep; the iterator converts
+    // per element instead of materializing a rep-typed copy.
     bool const added = detail::with_build_key_iterator<key_type>(
-      keys, [&](auto first, auto last) { result->add_async(first, last, stream); });
+      domain, keys, [&](auto first, auto last) { result->add_async(first, last, stream); });
     if (!added) {
       throw std::logic_error("[sirius_dynamic_bloom_filter] build carrier does not fit its rep.");
     }
@@ -186,13 +187,14 @@ struct bloom_replica {
 namespace {
 template <class KeyT>
 std::unique_ptr<bloom_replica> build_bloom_replica(int device_id,
+                                                   membership_key_domain const& domain,
                                                    cudf::column_view const& keys,
                                                    std::size_t num_blocks,
                                                    rmm::device_async_resource_ref mr,
                                                    cuda::stream_ref stream)
 {
   return std::make_unique<bloom_replica>(
-    device_id, build_bloom<sirius_bloom<KeyT>>(keys, num_blocks, mr, stream));
+    device_id, build_bloom<sirius_bloom<KeyT>>(domain, keys, num_blocks, mr, stream));
 }
 }  // namespace
 
@@ -228,6 +230,12 @@ sirius_dynamic_bloom_filter::sirius_dynamic_bloom_filter(cudf::column_view const
   if (!domain.has_value()) {
     throw std::invalid_argument("[sirius_dynamic_bloom_filter] unsupported key type.");
   }
+  // A DECIMAL128 build whose unscaled values exceed the int64 rep cannot be stored exactly.
+  if (!membership_build_fits_rep(keys, stream, mr)) {
+    throw std::invalid_argument(
+      "[sirius_dynamic_bloom_filter] build keys do not fit the key rep (DECIMAL128 values outside "
+      "int64).");
+  }
   _domain = *domain;
   // Keep compacted storage alive until add_async is queued on stream.
   std::unique_ptr<cudf::table> compacted;
@@ -246,7 +254,8 @@ sirius_dynamic_bloom_filter::sirius_dynamic_bloom_filter(cudf::column_view const
 
   auto source = detail::dispatch_key_rep(_domain.rep, [&](auto key_tag) {
     using key_type = decltype(key_tag);
-    return build_bloom_replica<key_type>(_impl->source_device, build_keys, num_blocks, mr, s);
+    return build_bloom_replica<key_type>(
+      _impl->source_device, _domain, build_keys, num_blocks, mr, s);
   });
   _impl->replicas.push_back(std::move(source));
 }

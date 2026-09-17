@@ -25,7 +25,8 @@
 // cudf::type_dispatcher is deliberately not used for the (key rep, probe carrier) pair: the
 // allowed pairs are a short explicit list and are the correctness surface, so they are spelled
 // out here, and the instantiation count stays bounded (per filter kind: 2 signed reps x 4 signed
-// carriers + 2 unsigned reps x 4 unsigned carriers = 16 probe kernels).
+// carriers + 2 unsigned reps x 4 unsigned carriers = 16 probe kernels, plus 2 signed reps x the
+// __int128 carrier of DECIMAL128 probes = 18; DECIMAL32/64 probes reuse the int32/int64 kernels).
 
 // sirius
 #include <op/dynamic_filter/dynamic_filter_key_domain.hpp>
@@ -130,8 +131,9 @@ __device__ __forceinline__ bool prior_mask_keeps(std::uint32_t const* words,
 // Probe adapters: read probe[i] at its own carrier, produce a KeyT or "definite non-member"
 //===----------------------------------------------------------------------===//
 
-/// Integer carriers of the same signedness as KeyT (native ints and their narrowed carriers).
-/// A new key family whose probes are not plain integers adds its own adapter with this shape.
+/// Integer carriers of the same signedness as KeyT: native ints and their narrowed carriers, and
+/// the unscaled storage of same-scale fixed-point probes. A new key family whose probes are not
+/// plain integers adds its own adapter with this shape.
 template <class ProbeT, class KeyT>
 struct integral_probe_adapter {
   using key_type = KeyT;
@@ -171,6 +173,20 @@ bool dispatch_family_carrier(cudf::data_type t, Fn&& fn)
   }
 }
 
+/// Invokes @p fn with a value-initialized instance of the unscaled storage integer behind the
+/// fixed-point type @p t, or returns false without invoking it. Scale is the caller's check: the
+/// storage integers of two scales are not comparable.
+template <class Fn>
+bool dispatch_decimal_carrier(cudf::data_type t, Fn&& fn)
+{
+  switch (t.id()) {
+    case cudf::type_id::DECIMAL32: fn(std::int32_t{}); return true;
+    case cudf::type_id::DECIMAL64: fn(std::int64_t{}); return true;
+    case cudf::type_id::DECIMAL128: fn(__int128_t{}); return true;
+    default: return false;
+  }
+}
+
 /// The (key domain, probe type) switch. Invokes @p fn once with the adapter that reads @p probe
 /// into KeyT, or returns false (= decline) without invoking it. KeyT must be the rep the domain
 /// was classified to; a rep/family disagreement is unreachable and also declines. Each key family
@@ -180,18 +196,28 @@ bool dispatch_probe_adapter(membership_key_domain const& domain,
                             cudf::column_view const& probe,
                             Fn&& fn)
 {
-  auto const integral_arm = [&]() {
-    return dispatch_family_carrier<KeyT>(probe.type(), [&](auto probe_tag) {
-      using probe_type = decltype(probe_tag);
-      fn(integral_probe_adapter<probe_type, KeyT>{probe.data<probe_type>()});
-    });
+  auto const adapt = [&](auto probe_tag) {
+    using probe_type = decltype(probe_tag);
+    fn(integral_probe_adapter<probe_type, KeyT>{probe.data<probe_type>()});
   };
   switch (domain.family) {
     case membership_key_family::signed_int:
-      if constexpr (cuda::std::is_signed_v<KeyT>) { return integral_arm(); }
+      if constexpr (cuda::std::is_signed_v<KeyT>) {
+        return dispatch_family_carrier<KeyT>(probe.type(), adapt);
+      }
       return false;
     case membership_key_family::unsigned_int:
-      if constexpr (cuda::std::is_unsigned_v<KeyT>) { return integral_arm(); }
+      if constexpr (cuda::std::is_unsigned_v<KeyT>) {
+        return dispatch_family_carrier<KeyT>(probe.type(), adapt);
+      }
+      return false;
+    case membership_key_family::decimal:
+      // Same scale, any fixed-point width: the unscaled storage is then a plain signed integer
+      // and the integral adapter's range check makes a wider carrier exact.
+      if constexpr (cuda::std::is_signed_v<KeyT>) {
+        if (probe.type().scale() != domain.scale) { return false; }
+        return dispatch_decimal_carrier(probe.type(), adapt);
+      }
       return false;
   }
   return false;
@@ -202,7 +228,7 @@ bool dispatch_probe_adapter(membership_key_domain const& domain,
 //===----------------------------------------------------------------------===//
 
 template <class KeyT>
-struct widen_to {
+struct convert_to_rep {
   template <class T>
   __host__ __device__ __forceinline__ KeyT operator()(T value) const noexcept
   {
@@ -211,22 +237,42 @@ struct widen_to {
 };
 
 /// Invokes @p fn(first, last) with a device iterator range yielding the build keys as KeyT,
-/// widening a narrower same-family carrier per element so no widened build copy is needed.
-/// Returns false without invoking @p fn when @p keys is not a carrier KeyT can hold; classify
-/// always picks a rep at least as wide as the build carrier, so that is unreachable in practice.
+/// converting a same-family carrier per element so no rep-typed build copy is needed. Narrower
+/// carriers widen; the one narrowing pair, DECIMAL128 into the int64 rep, relies on the
+/// constructor having verified the column with membership_build_fits_rep. Returns false without
+/// invoking @p fn when @p keys is not a carrier of @p domain that KeyT can hold; classify always
+/// picks a rep that holds the build carrier, so that is unreachable in practice.
 template <class KeyT, class Fn>
-bool with_build_key_iterator(cudf::column_view const& keys, Fn&& fn)
+bool with_build_key_iterator(membership_key_domain const& domain,
+                             cudf::column_view const& keys,
+                             Fn&& fn)
 {
-  bool invoked = false;
-  dispatch_family_carrier<KeyT>(keys.type(), [&](auto carrier_tag) {
-    using carrier_type = decltype(carrier_tag);
-    if constexpr (sizeof(carrier_type) <= sizeof(KeyT)) {
+  bool invoked         = false;
+  auto const emit_from = [&](auto carrier_tag) {
+    using carrier_type            = decltype(carrier_tag);
+    constexpr bool widens_or_same = sizeof(carrier_type) <= sizeof(KeyT);
+    constexpr bool verified_narrowing =
+      cuda::std::is_same_v<carrier_type, __int128_t> && cuda::std::is_same_v<KeyT, std::int64_t>;
+    if constexpr (widens_or_same || verified_narrowing) {
       auto const first =
-        thrust::make_transform_iterator(keys.data<carrier_type>(), widen_to<KeyT>{});
+        thrust::make_transform_iterator(keys.data<carrier_type>(), convert_to_rep<KeyT>{});
       fn(first, first + keys.size());
       invoked = true;
     }
-  });
+  };
+  switch (domain.family) {
+    case membership_key_family::signed_int:
+    case membership_key_family::unsigned_int:
+      dispatch_family_carrier<KeyT>(keys.type(), emit_from);
+      break;
+    case membership_key_family::decimal:
+      if constexpr (cuda::std::is_signed_v<KeyT>) {
+        if (keys.type().scale() == domain.scale) {
+          dispatch_decimal_carrier(keys.type(), emit_from);
+        }
+      }
+      break;
+  }
   return invoked;
 }
 
