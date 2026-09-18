@@ -29,6 +29,13 @@ if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
   message(STATUS "CMAKE_CUDA_ARCHITECTURES not defined. Setting to 'native'.")
 endif()
 
+# CCCL 3.4.0's warp-specialized Blackwell DeviceScan silently corrupts scan
+# results under concurrent streams on GB300 (ablation: strikes vanish with this
+# flag). No minimal reproducer yet; the compute-sanitizer report against the
+# same kernel is a known sanitizer <= 13.2 false positive (NVIDIA/cccl#8288).
+# Fall back to the decoupled-lookback path until the cause is pinned down.
+add_compile_definitions(CCCL_DISABLE_WARPSPEED_SCAN)
+
 # Optional features
 option(ENABLE_STREAM_CHECK
        "Enable stream check library for debugging default stream usage" OFF)
