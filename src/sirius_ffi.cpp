@@ -43,12 +43,19 @@
 #include "sirius_config.hpp"   // sirius::sirius_config
 #include "sirius_context.hpp"  // duckdb::SiriusContext
 
+#include <cuda_runtime_api.h>
+
+#include <yaml-cpp/yaml.h>
+
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstdlib>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <set>
+#include <stdexcept>
 
 namespace sirius::ffi {
 
@@ -147,12 +154,94 @@ void in_transaction(std::mutex& serial, duckdb::Connection& conn, Body&& body)
   conn.Commit();
 }
 
+// Set while a Context is alive. The engine installs process-wide state, so only one may exist.
+std::atomic<bool> g_context_alive{false};
+
+// Claims g_context_alive for one Context and releases it on destruction.
+struct live_context_claim {
+  live_context_claim()
+  {
+    if (g_context_alive.exchange(true)) {
+      throw std::logic_error("a sirius::ffi::Context already exists in this process");
+    }
+  }
+  ~live_context_claim() { g_context_alive.store(false); }
+
+  live_context_claim(const live_context_claim&)            = delete;
+  live_context_claim& operator=(const live_context_claim&) = delete;
+};
+
+// Reject a GPU list the engine cannot bring up exactly, naming the offending id.
+void validate_gpu_ids(const std::vector<int>& gpu_ids)
+{
+  if (gpu_ids.empty()) { throw std::invalid_argument("gpu_ids must not be empty"); }
+  int device_count  = 0;
+  auto const status = cudaGetDeviceCount(&device_count);
+  if (status != cudaSuccess) {
+    throw std::runtime_error(std::string("cudaGetDeviceCount failed: ") +
+                             cudaGetErrorString(status));
+  }
+  std::set<int> seen;
+  for (int id : gpu_ids) {
+    if (id < 0) {
+      throw std::invalid_argument("gpu_ids: negative device id " + std::to_string(id));
+    }
+    if (id >= device_count) {
+      throw std::invalid_argument("gpu_ids: device id " + std::to_string(id) + " is not visible (" +
+                                  std::to_string(device_count) + " visible device(s))");
+    }
+    if (!seen.insert(id).second) {
+      throw std::invalid_argument("gpu_ids: duplicate device id " + std::to_string(id));
+    }
+  }
+}
+
+// Load `config_path` (or an empty `sirius:` document) and pin the topology to `gpu_ids`, with
+// every listed GPU available to one query.
+sirius::parsed_sirius_config config_with_gpus(const std::string& config_path,
+                                              const std::vector<int>& gpu_ids)
+{
+  YAML::Node root;
+  if (config_path.empty()) {
+    root["sirius"] = YAML::Node(YAML::NodeType::Map);
+  } else {
+    try {
+      root = YAML::LoadFile(config_path);
+    } catch (const std::exception& e) {
+      throw sirius::configuration_input_error(config_path + ": " + e.what());
+    }
+  }
+  // A document without a `sirius` map is left as is, so from_node reports it.
+  if (root.IsMap() && root["sirius"]) {
+    if (root["sirius"].IsNull()) { root["sirius"] = YAML::Node(YAML::NodeType::Map); }
+    auto sirius = root["sirius"];
+    if (sirius.IsMap()) {
+      if (!sirius["topology"] || sirius["topology"].IsNull()) {
+        sirius["topology"] = YAML::Node(YAML::NodeType::Map);
+      }
+      auto topology = sirius["topology"];
+      if (topology.IsMap()) {
+        // num_gpus and gpu_ids are mutually exclusive.
+        topology.remove("num_gpus");
+        topology["gpu_ids"] = gpu_ids;
+        // 0 = a query may use every active GPU.
+        topology["gpus_per_query"] = 0;
+      }
+    }
+  }
+  return sirius::parsed_sirius_config::from_node(root, config_path);
+}
+
 }  // namespace
 
 // PIMPL: holds the engine + embedded DuckDB using DuckDB's own smart pointers
 // (duckdb::shared_ptr, so the SiriusContext can register as a ClientContextState).
 struct Context::Impl {
+  // First member: claimed before anything is brought up, released after everything is torn down.
+  live_context_claim claim;
   duckdb::shared_ptr<duckdb::SiriusContext> context;
+  // GPU ids the memory manager brought up, sorted and deduplicated. Set once by bring_up().
+  std::vector<int> active_gpu_ids;
   duckdb::unique_ptr<duckdb::DuckDB> db;
   duckdb::unique_ptr<duckdb::Connection> conn;
   // Serializes transactions on `conn`; see in_transaction().
@@ -163,6 +252,14 @@ struct Context::Impl {
     install_log_sink_from_env();
     context = duckdb::make_shared_ptr<duckdb::SiriusContext>();
     context->initialize(config);
+    // The same derivation SiriusContext::initialize uses for its active GPU set.
+    for (auto const* gpu_space :
+         context->get_memory_manager().get_memory_spaces_for_tier(cucascade::memory::Tier::GPU)) {
+      if (gpu_space != nullptr) { active_gpu_ids.push_back(gpu_space->get_device_id()); }
+    }
+    std::sort(active_gpu_ids.begin(), active_gpu_ids.end());
+    active_gpu_ids.erase(std::unique(active_gpu_ids.begin(), active_gpu_ids.end()),
+                         active_gpu_ids.end());
 
     // Substrait lowering uses core functions and resolves local_files reads to parquet_scan.
     db = duckdb::make_uniq<duckdb::DuckDB>(nullptr);
@@ -218,6 +315,14 @@ Context::Context(const std::string& config_path) : impl_(std::make_unique<Impl>(
   impl_->bring_up(config);
 }
 
+Context::Context(const std::string& config_path, const std::vector<int>& gpu_ids)
+  : impl_(std::make_unique<Impl>())
+{
+  validate_gpu_ids(gpu_ids);
+  auto config = config_with_gpus(config_path, gpu_ids);
+  impl_->bring_up(config);
+}
+
 // Defined here, where the heavy types are complete: destroying `impl_` tears down
 // the embedded DuckDB and the initialized engine.
 Context::~Context() = default;
@@ -268,6 +373,17 @@ std::unique_ptr<Context> make_context() { return std::make_unique<Context>(); }
 std::unique_ptr<Context> make_context_from_config(const std::string& config_path)
 {
   return std::make_unique<Context>(config_path);
+}
+
+std::unique_ptr<Context> make_context_with_gpus(const std::vector<int>& gpu_ids,
+                                                const std::string& config_path)
+{
+  return std::make_unique<Context>(config_path, gpu_ids);
+}
+
+std::unique_ptr<std::vector<int>> Context::active_gpu_ids() const
+{
+  return std::make_unique<std::vector<int>>(impl_->active_gpu_ids);
 }
 
 // ---------------------------------------------------------------------------

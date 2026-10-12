@@ -18,12 +18,14 @@
 // Builds Substrait in the test because the FFI has no SQL helper.
 // Covers a result fragment, a relay_from chain, several fragments built before any runs (on one
 // and on two threads), build() and run()/drop on different threads, drop after build(), a build()
-// that fails after setup, and execute_substrait. Spec errors and failed-build rollback live in
+// that fails after setup, execute_substrait, make_context_with_gpus / active_gpu_ids, and the
+// single-live-Context guard. Spec errors and failed-build rollback live in
 // test_streaming_fragment.cpp and test_sirius_ffi_fragment.cpp.
 
 #include "sirius/exception.hpp"
 #include "sirius/ffi.hpp"
 #include "utils/parquet_fixture_utils.hpp"
+#include "utils/sirius_test_env.hpp"
 
 #include <catch.hpp>
 #include <duckdb.hpp>
@@ -32,9 +34,11 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <future>
 #include <memory>
 #include <source_location>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -139,6 +143,29 @@ std::vector<std::int64_t> result_i64s(sirius::ffi::Fragment& fragment)
   ArrowArrayStream stream{};
   fragment.result_to_arrow(reinterpret_cast<std::uintptr_t>(&stream));
   return collect_i64_column(stream);
+}
+
+std::vector<std::int64_t> execute_i64s(sirius::ffi::Context& ctx, std::string const& plan)
+{
+  ArrowArrayStream stream{};
+  ctx.execute_substrait(plan, reinterpret_cast<std::uintptr_t>(&stream));
+  return collect_i64_column(stream);
+}
+
+// Small per-GPU and host budgets for make_context_with_gpus. The num_gpus key checks that the
+// GPU list replaces it rather than conflicting with it.
+std::string write_gpu_list_config(sirius::test::scratch_dir& scratch)
+{
+  auto const path = scratch.file("gpus.yaml");
+  std::ofstream(path) << "sirius:\n"
+                         "  topology:\n"
+                         "    num_gpus: 1\n"
+                         "  memory:\n"
+                         "    gpu:\n"
+                         "      usage_limit_bytes: 2147483648\n"
+                         "    host:\n"
+                         "      capacity_bytes: 4294967296\n";
+  return path;
 }
 
 }  // namespace
@@ -362,4 +389,85 @@ TEST_CASE("FFI concurrent run() and execute_substrait on one Context wait for ea
   REQUIRE(result_i64s(*first) == expected);
   REQUIRE(result_i64s(*second) == expected);
   REQUIRE(collect_i64_column(direct) == expected);
+}
+
+TEST_CASE("FFI make_context_with_gpus on one GPU reports it and executes",
+          "[isolated_context][sirius_ffi]")
+{
+  sirius::test::scratch_dir scratch("ffi_embedder_gpus_one");
+  auto const path = scratch.file("ids.parquet");
+  write_ids_parquet(path);
+
+  auto ctx = sirius::ffi::make_context_with_gpus({0}, write_gpu_list_config(scratch));
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0});
+  REQUIRE(execute_i64s(*ctx, local_files_plan(path)) == std::vector<std::int64_t>{1, 2, 3, 4, 5});
+}
+
+TEST_CASE("FFI make_context_with_gpus on two GPUs reports both and executes",
+          "[isolated_context][sirius_ffi][multi_gpu]")
+{
+  if (!sirius::test::has_gpus(2)) { SKIP("needs 2 GPUs"); }
+  sirius::test::scratch_dir scratch("ffi_embedder_gpus_two");
+  auto const path = scratch.file("ids.parquet");
+  write_ids_parquet(path);
+
+  auto ctx = sirius::ffi::make_context_with_gpus({1, 0}, write_gpu_list_config(scratch));
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0, 1});
+  REQUIRE(execute_i64s(*ctx, local_files_plan(path)) == std::vector<std::int64_t>{1, 2, 3, 4, 5});
+}
+
+TEST_CASE("FFI a Context may be recreated on a different GPU set",
+          "[isolated_context][sirius_ffi][multi_gpu]")
+{
+  if (!sirius::test::has_gpus(2)) { SKIP("needs 2 GPUs"); }
+  sirius::test::scratch_dir scratch("ffi_embedder_gpus_recreate");
+  auto const path   = scratch.file("ids.parquet");
+  auto const config = write_gpu_list_config(scratch);
+  write_ids_parquet(path);
+
+  auto ctx = sirius::ffi::make_context_with_gpus({0, 1}, config);
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0, 1});
+  ctx.reset();
+
+  ctx = sirius::ffi::make_context_with_gpus({0}, config);
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0});
+  REQUIRE(execute_i64s(*ctx, local_files_plan(path)) == std::vector<std::int64_t>{1, 2, 3, 4, 5});
+}
+
+TEST_CASE("FFI a second live Context is rejected by every constructor",
+          "[isolated_context][sirius_ffi]")
+{
+  sirius::test::scratch_dir scratch("ffi_embedder_second_context");
+  auto const path   = scratch.file("ids.parquet");
+  auto const config = write_gpu_list_config(scratch);
+  write_ids_parquet(path);
+
+  auto ctx = sirius::ffi::make_context_with_gpus({0}, config);
+  REQUIRE_THROWS_AS(sirius::ffi::make_context(), std::logic_error);
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_from_config(isolated_memory_config_path().string()),
+                    std::logic_error);
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_with_gpus({0}, config), std::logic_error);
+  REQUIRE_THROWS_WITH(sirius::ffi::make_context_with_gpus({0}, config),
+                      Catch::Matchers::ContainsSubstring("already exists"));
+
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0});
+  REQUIRE(execute_i64s(*ctx, local_files_plan(path)) == std::vector<std::int64_t>{1, 2, 3, 4, 5});
+}
+
+TEST_CASE("FFI make_context_with_gpus rejects an invalid GPU list",
+          "[isolated_context][sirius_ffi]")
+{
+  sirius::test::scratch_dir scratch("ffi_embedder_gpus_invalid");
+  auto const config = write_gpu_list_config(scratch);
+
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_with_gpus({}, config), std::invalid_argument);
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_with_gpus({-1}, config), std::invalid_argument);
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_with_gpus({0, 0}, config), std::invalid_argument);
+  REQUIRE_THROWS_WITH(sirius::ffi::make_context_with_gpus({99}, config),
+                      Catch::Matchers::ContainsSubstring("99"));
+  REQUIRE_THROWS_AS(sirius::ffi::make_context_with_gpus({99}, config), std::invalid_argument);
+
+  // No failed attempt left a Context alive.
+  auto ctx = sirius::ffi::make_context_with_gpus({0}, config);
+  REQUIRE(*ctx->active_gpu_ids() == std::vector<int>{0});
 }

@@ -55,10 +55,24 @@ class Fragment;
 /// `make_context_from_config()` and freed when the `UniquePtr` drops. The
 /// constructors can throw (bad config, GPU bring-up failure); the `make_*`
 /// factories are bound as fallible so failures surface as errors.
+///
+/// At most one `Context` may be alive in a process at a time. The engine
+/// installs process-wide state (cuDF's pinned memory resource, telemetry
+/// registries), so every constructor throws `std::logic_error` while another
+/// `Context` exists. A new `Context` may be created once the previous one is
+/// destroyed, including on a different GPU set.
 class SIRIUS_FFI_EXPORT Context {
  public:
   Context();
   explicit Context(const std::string& config_path);
+  /// Engine on exactly `gpu_ids` (CUDA-visible ordinals). Config is loaded from
+  /// `config_path` (built-in defaults when empty); then topology `gpu_ids` is overridden,
+  /// any `num_gpus` key is dropped, and `gpus_per_query` is set so one query may use every
+  /// listed GPU.
+  /// @throws std::invalid_argument on an empty list, a negative or duplicate id, or an id
+  ///         >= the visible device count; std::logic_error if another Context is alive;
+  ///         std::runtime_error on config / GPU bring-up failure.
+  Context(const std::string& config_path, const std::vector<int>& gpu_ids);
   ~Context();
 
   Context(const Context&)            = delete;
@@ -70,6 +84,10 @@ class SIRIUS_FFI_EXPORT Context {
   /// `ArrowArrayStream` that the caller releases per the Arrow ABI. Throws on
   /// translation or execution failure.
   void execute_substrait(const std::string& plan, std::uintptr_t out_stream_addr);
+
+  /// GPUs this engine actually brought up, sorted ascending (Sirius sorts and dedups
+  /// active ids in SiriusContext::initialize). Thread-safe (const).
+  [[nodiscard]] std::unique_ptr<std::vector<int>> active_gpu_ids() const;
 
  private:
   struct Impl;
@@ -192,6 +210,11 @@ SIRIUS_FFI_EXPORT std::unique_ptr<Context> make_context();
 
 /// Create a [`Context`] configured from the YAML file at `config_path`.
 SIRIUS_FFI_EXPORT std::unique_ptr<Context> make_context_from_config(const std::string& config_path);
+
+/// Create a [`Context`] on exactly `gpu_ids`. Factory twin of
+/// `Context(config_path, gpu_ids)`, with the same throws.
+SIRIUS_FFI_EXPORT std::unique_ptr<Context> make_context_with_gpus(
+  const std::vector<int>& gpu_ids, const std::string& config_path = {});
 
 /// Create a [`Fragment`] on `context`. The context must outlive it.
 SIRIUS_FFI_EXPORT std::unique_ptr<Fragment> make_fragment(Context& context);
